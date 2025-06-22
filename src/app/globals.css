@@ -1,0 +1,64 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Metallic Theme */
+    --background: 0 0% 98%; /* Near white */
+    --foreground: 220 10% 10%; /* Very dark blue/gray for text */
+    
+    --card: 0 0% 100%; /* White for cards */
+    --card-foreground: 220 10% 15%; /* Dark gray for card text */
+    
+    --popover: 0 0% 100%; /* White popover */
+    --popover-foreground: 220 10% 15%; /* Dark gray for popover text */
+    
+    --primary: 0 0% 10%; /* Black for primary buttons */
+    --primary-foreground: 0 0% 95%; /* Off-white text on primary buttons */
+    
+    --secondary: 220 15% 90%; /* Light gray for secondary elements */
+    --secondary-foreground: 220 10% 25%; /* Darker gray text for secondary */
+    
+    --muted: 220 15% 92%; /* Very light muted background */
+    --muted-foreground: 220 10% 45%; /* Medium gray for muted text */
+    
+    --accent: 210 15% 75%; /* Metallic silver/light gray for accents */
+    --accent-foreground: 220 10% 10%; /* Dark text on accent */
+    
+    --destructive: 0 70% 55%; /* Clearer red for light theme */
+    --destructive-foreground: 0 0% 98%; /* White text on destructive */
+    
+    --border: 220 10% 88%; /* Light gray border */
+    --input: 0 0% 100%; /* White input background */
+    --ring: 210 15% 65%; /* Silver accent for focus rings */
+    
+    --radius: 0.5rem;
+
+    --chart-1: 190 70% 40%;
+    --chart-2: 210 60% 35%;
+    --chart-3: 230 80% 45%;
+    --chart-4: 180 65% 50%;
+    --chart-5: 200 75% 45%;
+
+    /* Sidebar variables for light metallic theme */
+    --sidebar-background: 220 15% 94%; /* Light gray for sidebar */
+    --sidebar-foreground: 220 10% 15%;   /* Dark gray/black */
+    --sidebar-primary: 0 0% 10%;  /* Black (same as primary button) */
+    --sidebar-primary-foreground: 0 0% 95%; /* Off-white text on primary */
+    --sidebar-accent: 220 15% 88%;    /* Lighter muted gray for sidebar hover */
+    --sidebar-accent-foreground: 220 10% 10%; /* Dark gray on hover */
+    --sidebar-border: 220 10% 85%;   /* Light gray border for sidebar */
+    --sidebar-ring: 210 15% 65%;     /* Silver accent for focus */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
