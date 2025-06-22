@@ -100,7 +100,7 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container mx-auto px-4 py-24 md:py-32">
+        <section className="container mx-auto px-4 py-24">
           <div className="max-w-3xl">
             <div className="flex items-center gap-2 mb-8">
               <div className="bg-neutral-100 text-neutral-800 px-3 py-1 text-xs font-medium rounded-full">
@@ -111,13 +111,16 @@ export default function LandingPage() {
             </div>
 
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+              <span className="block mb-2 text-primary font-extrabold text-xl md:text-xl">
+                {`F*ck expensive newsletter tools that charge per subscriber.`}
+              </span>
               The open-source
               <br />newsletter platform
             </h1>
 
             <p className="text-xl text-neutral-600 mb-8 max-w-2xl">
               Use your own email provider. No vendor lock-in. Full control over
-              your data.
+              your data. <span className="font-bold text-primary">AI-ready</span> for content, segmentation, and automation—integrate AI when you need it.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
