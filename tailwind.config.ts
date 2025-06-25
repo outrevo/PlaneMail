@@ -14,6 +14,8 @@ export default {
         body: ['var(--font-inter)', 'sans-serif'],
         headline: ['var(--font-playfair-display)', 'serif'],
         code: ['monospace'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+        sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -116,7 +118,7 @@ export default {
       backgroundSize: {
         '200%': '200% auto',
       },
-      typography: (theme) => ({
+      typography: (theme: any) => ({
         DEFAULT: {
           css: {
             color: theme('colors.foreground'),

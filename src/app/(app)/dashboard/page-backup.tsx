@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BarChart, LineChart, Users, Mail, PieChart, Activity, Plus, ArrowRight } from 'lucide-react';
@@ -43,78 +44,64 @@ export default async function DashboardPage() {
                 {stat.title}
               </div>
             </div>
-            <div className="space-y-1">
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-neutral-400">{stat.trend}</p>
-            </div>
-          </div>
+            <div className="space-y-1">{
+              <div className="text-3xl font-bold">{stat.value}</div>
+              <p className="text-xs text-muted-foreground pt-1">{stat.trend}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Recent Activity */}
-        <div className="border border-neutral-200 rounded-lg bg-white">
-          <div className="p-6 border-b border-neutral-200">
-            <div className="flex items-center gap-2">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
-              <h2 className="text-lg font-bold">Recent Activity</h2>
-            </div>
-            <p className="text-sm text-neutral-600 mt-1">Latest events from your campaigns</p>
-          </div>
-          <div className="p-6">
+              Recent Activity
+            </CardTitle>
+            <CardDescription>Latest events from your campaigns and subscribers.</CardDescription>
+          </CardHeader>
+          <CardContent>
             {recentActivities.length > 0 ? (
-              <ul className="space-y-4">
+              <ul className="space-y-3">
                 {recentActivities.map((activity) => (
                   <li key={activity.id} className="flex items-start text-sm">
-                    <div className="flex-1">
+                    <div className="ml-0 flex-1">
                       <p className="font-medium">{activity.text}</p>
-                      <p className="text-xs text-neutral-500 mt-1">{activity.timeAgo}</p>
+                      <p className="text-xs text-muted-foreground">{activity.timeAgo}</p>
                     </div>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-neutral-500">No recent activity to display.</p>
+              <p className="text-sm text-muted-foreground">No recent activity to display.</p>
             )}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="border border-neutral-200 rounded-lg bg-white">
-          <div className="p-6 border-b border-neutral-200">
-            <div className="flex items-center gap-2">
-              <PieChart className="h-5 w-5" />
-              <h2 className="text-lg font-bold">Quick Actions</h2>
-            </div>
-            <p className="text-sm text-neutral-600 mt-1">Jump to key sections</p>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 gap-3">
-              <Button asChild variant="outline" className="justify-start border-black/20 hover:border-black/40 font-mono">
-                <Link href="/templates/editor/new">
-                  Create Template
-                  <ArrowRight className="ml-auto h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="justify-start border-black/20 hover:border-black/40 font-mono">
-                <Link href="/subscribers">
-                  Manage Subscribers
-                  <ArrowRight className="ml-auto h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="justify-start border-black/20 hover:border-black/40 font-mono">
-                <Link href="/newsletters">
-                  View Newsletters
-                  <ArrowRight className="ml-auto h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="outline" className="justify-start border-neutral-200 text-neutral-400 cursor-not-allowed" disabled>
-                Analytics (Coming Soon)
-              </Button>
-            </div>
-          </div>
-        </div>
+            {/* <Button variant="link" className="mt-4 px-0">View all activity</Button> */}
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <PieChart className="h-5 w-5" />
+                Quick Links
+            </CardTitle>
+            <CardDescription>Jump to key sections of PlaneMail.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <Button variant="outline" asChild className="justify-start">
+              <Link href="/templates/editor/new">Create New Template</Link>
+            </Button>
+            <Button variant="outline" asChild className="justify-start">
+               <Link href="/subscribers">Manage Subscribers</Link>
+            </Button>
+             <Button variant="outline" asChild className="justify-start">
+               <Link href="/newsletters">View Sent Newsletters</Link>
+            </Button>
+            <Button variant="outline" asChild className="justify-start" disabled>
+               <Link href="#">View Reports (Soon)</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

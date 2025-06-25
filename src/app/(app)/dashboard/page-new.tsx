@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { BarChart, LineChart, Users, Mail, PieChart, Activity, Plus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getDashboardStats, getRecentActivityItems, type DashboardStats, type ActivityItem } from './actions';

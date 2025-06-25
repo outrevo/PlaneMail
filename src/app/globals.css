@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -61,4 +60,40 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom App Styles */
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* Developer-focused styling */
+body {
+  font-family: ui-monospace, SFMono-Regular, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* Override shadcn defaults for our monospace theme */
+h1, h2, h3, h4, h5, h6 {
+  font-family: ui-monospace, SFMono-Regular, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Consistent button styling */
+.btn-primary {
+  @apply bg-black hover:bg-black/90 text-white font-mono;
+}
+
+.btn-secondary {
+  @apply border border-black/20 hover:border-black/40 bg-white text-black font-mono;
+}
+
+/* Card styling for consistency */
+.card-minimal {
+  @apply border border-neutral-200 rounded-lg bg-white;
+}
+
+/* Input consistency */
+input, textarea, select {
+  font-family: ui-monospace, SFMono-Regular, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
