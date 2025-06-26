@@ -1,0 +1,414 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light Metallic Theme */
+    --background: 0 0% 98%; /* Near white */
+    --foreground: 220 10% 10%; /* Very dark blue/gray for text */
+    
+    --card: 0 0% 100%; /* White for cards */
+    --card-foreground: 220 10% 15%; /* Dark gray for card text */
+    
+    --popover: 0 0% 100%; /* White popover */
+    --popover-foreground: 220 10% 15%; /* Dark gray for popover text */
+    
+    --primary: 0 0% 10%; /* Black for primary buttons */
+    --primary-foreground: 0 0% 95%; /* Off-white text on primary buttons */
+    
+    --secondary: 220 15% 90%; /* Light gray for secondary elements */
+    --secondary-foreground: 220 10% 25%; /* Darker gray text for secondary */
+    
+    --muted: 220 15% 92%; /* Very light muted background */
+    --muted-foreground: 220 10% 45%; /* Medium gray for muted text */
+    
+    --accent: 210 15% 75%; /* Metallic silver/light gray for accents */
+    --accent-foreground: 220 10% 10%; /* Dark text on accent */
+    
+    --destructive: 0 70% 55%; /* Clearer red for light theme */
+    --destructive-foreground: 0 0% 98%; /* White text on destructive */
+    
+    --border: 220 10% 88%; /* Light gray border */
+    --input: 0 0% 100%; /* White input background */
+    --ring: 210 15% 65%; /* Silver accent for focus rings */
+    
+    --radius: 0.5rem;
+
+    --chart-1: 190 70% 40%;
+    --chart-2: 210 60% 35%;
+    --chart-3: 230 80% 45%;
+    --chart-4: 180 65% 50%;
+    --chart-5: 200 75% 45%;
+
+    /* Sidebar variables for light metallic theme */
+    --sidebar-background: 220 15% 94%; /* Light gray for sidebar */
+    --sidebar-foreground: 220 10% 15%;   /* Dark gray/black */
+    --sidebar-primary: 0 0% 10%;  /* Black (same as primary button) */
+    --sidebar-primary-foreground: 0 0% 95%; /* Off-white text on primary */
+    --sidebar-accent: 220 15% 88%;    /* Lighter muted gray for sidebar hover */
+    --sidebar-accent-foreground: 220 10% 10%; /* Dark gray on hover */
+    --sidebar-border: 220 10% 85%;   /* Light gray border for sidebar */
+    --sidebar-ring: 210 15% 65%;     /* Silver accent for focus */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom App Styles */
+
+/* Apple-inspired typography */
+body {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'pnum' 1, 'tnum' 0, 'onum' 1, 'lnum' 0, 'dlig' 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  line-height: 1.6;
+}
+
+/* Premium typography hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+}
+
+h1 {
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+h2 {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+h3 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Premium text styles */
+p {
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  line-height: 1.7;
+}
+
+/* Premium button styling */
+.btn-primary {
+  @apply bg-black hover:bg-black/90 text-white;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-feature-settings: 'kern' 1;
+}
+
+.btn-secondary {
+  @apply border border-black/20 hover:border-black/40 bg-white text-black;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-feature-settings: 'kern' 1;
+}
+
+/* Card styling for consistency */
+.card-minimal {
+  @apply border border-neutral-200 rounded-lg bg-white;
+}
+
+/* Premium input styling */
+input, textarea, select {
+  font-family: inherit;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Apple-style scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Apple-style focus rings */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid rgba(0, 122, 255, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Premium selection styles */
+::selection {
+  background: rgba(0, 122, 255, 0.2);
+  color: inherit;
+}
+
+::-moz-selection {
+  background: rgba(0, 122, 255, 0.2);
+  color: inherit;
+}
+
+/* Liquid Glass Utilities */
+@layer utilities {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+  
+  .glass-card:hover::before {
+    left: 100%;
+  }
+  
+  .glass-button {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 
+      0 4px 16px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+  
+  .glass-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+  
+  .glass-button:hover::before {
+    left: 100%;
+  }
+  
+  .glass-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 
+      0 12px 40px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+  
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 4px 24px rgba(0, 0, 0, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+  
+  .liquid-gradient {
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.1) 0%, 
+      rgba(168, 85, 247, 0.1) 25%, 
+      rgba(236, 72, 153, 0.1) 50%, 
+      rgba(59, 130, 246, 0.1) 100%);
+    background-size: 400% 400%;
+    animation: liquidFlow 8s ease-in-out infinite;
+    position: relative;
+  }
+  
+  .liquid-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.05) 0%, 
+      rgba(168, 85, 247, 0.05) 25%, 
+      rgba(236, 72, 153, 0.05) 50%, 
+      rgba(59, 130, 246, 0.05) 100%);
+    background-size: 200% 200%;
+    animation: liquidFlow 12s ease-in-out infinite reverse;
+    mix-blend-mode: overlay;
+  }
+  
+  .text-liquid {
+    background: linear-gradient(135deg, 
+      #6366f1 0%, 
+      #a855f7 25%, 
+      #ec4899 50%, 
+      #3b82f6 100%);
+    background-size: 300% 300%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: liquidFlow 6s ease-in-out infinite;
+    position: relative;
+  }
+  
+  .text-liquid::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.2) 0%, 
+      rgba(168, 85, 247, 0.2) 25%, 
+      rgba(236, 72, 153, 0.2) 50%, 
+      rgba(59, 130, 246, 0.2) 100%);
+    background-size: 300% 300%;
+    animation: liquidFlow 8s ease-in-out infinite reverse;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+  
+  .floating {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .floating:nth-child(2) {
+    animation-delay: -2s;
+  }
+  
+  .floating:nth-child(3) {
+    animation-delay: -4s;
+  }
+  
+  .morphing-bg {
+    background: linear-gradient(
+      45deg,
+      rgba(99, 102, 241, 0.1),
+      rgba(168, 85, 247, 0.1),
+      rgba(236, 72, 153, 0.1),
+      rgba(59, 130, 246, 0.1)
+    );
+    background-size: 400% 400%;
+    animation: morphing 15s ease-in-out infinite;
+  }
+  
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+  
+  .stagger-up {
+    animation: staggerUp 0.6s ease-out forwards;
+  }
+  
+  .stagger-up:nth-child(1) { animation-delay: 0.1s; }
+  .stagger-up:nth-child(2) { animation-delay: 0.2s; }
+  .stagger-up:nth-child(3) { animation-delay: 0.3s; }
+  .stagger-up:nth-child(4) { animation-delay: 0.4s; }
+}
+
+@keyframes liquidFlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-20px) rotate(1deg); }
+  66% { transform: translateY(-10px) rotate(-1deg); }
+}
+
+@keyframes morphing {
+  0%, 100% { 
+    background-position: 0% 50%;
+    filter: hue-rotate(0deg);
+  }
+  25% { 
+    background-position: 100% 50%;
+    filter: hue-rotate(45deg);
+  }
+  50% { 
+    background-position: 100% 100%;
+    filter: hue-rotate(90deg);
+  }
+  75% { 
+    background-position: 0% 100%;
+    filter: hue-rotate(135deg);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes staggerUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

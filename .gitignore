@@ -19,6 +19,9 @@
 
 # production
 /build
+/dist
+apps/web/dist
+*.next
 
 # misc
 .DS_Store
@@ -37,11 +40,58 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.genkit/*
+# environment files
 .env*
+!.env.example
 
 # firebase
 firebase-debug.log
 firestore-debug.log
+
 # clerk configuration (can include secrets)
 /.clerk/
+
+# genkit
+.genkit/*
+
+# backup files and directories
+*.backup
+*.backup_*
+*_backup_*
+src_backup_*
+*.old
+*.new
+*.bak
+*.orig
+
+# temporary files
+*.tmp
+*.temp
+.cache/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+.DS_Store?
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Redis dumps
+dump.rdb
+
+# logs
+logs/
+*.log
+
+# queue service dist
+packages/queue-service/dist/
+packages/*/dist/
+
+# Turborepo cache
+.turbo/
