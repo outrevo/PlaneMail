@@ -69,14 +69,15 @@ export function PricingButton({ plan }: PricingButtonProps) {
 
   return (
     <Button
-      className={`w-full ${
+      className={`w-full font-medium transition-colors duration-200 ${
         plan.isPopular
-          ? 'bg-black hover:bg-black/90 text-white'
-          : 'border border-black/20 hover:border-black/40 bg-white text-black'
+          ? 'bg-black hover:bg-gray-900 text-white rounded-full'
+          : 'border border-gray-200 hover:bg-gray-50 bg-white text-black rounded-full'
       }`}
       variant={plan.isPopular ? 'default' : 'outline'}
       onClick={handleCheckout}
       disabled={isLoading}
+      style={{letterSpacing: '-0.01em'}}
     >
       <div className="flex items-center justify-center">
         {plan.hasTrial && (

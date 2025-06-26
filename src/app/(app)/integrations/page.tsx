@@ -345,24 +345,24 @@ export default function IntegrationsPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Loading integrations...</span>
+          <Loader2 className="h-8 w-8 animate-spin text-black" />
+          <span className="ml-2 text-gray-600">Loading integrations...</span>
         </div>
       ) : (
         <>
         {/* Brevo Integration Card */}
-        <Card className="shadow-lg">
+        <Card className="border border-gray-200 rounded-2xl shadow-sm">
           <CardHeader className="flex flex-col sm:flex-row items-start justify-between">
             <div className="flex items-center gap-3 mb-2 sm:mb-0">
               <BrevoLogoSvg />
               <div>
-                <CardTitle className="text-xl">
+                <CardTitle className="text-xl text-black font-semibold" style={{letterSpacing: '-0.01em'}}>
                   Brevo (Email Provider)
                 </CardTitle>
-                <CardDescription>Connect your Brevo account to send emails.</CardDescription>
+                <CardDescription className="text-gray-600">Connect your Brevo account to send emails.</CardDescription>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground self-start sm:self-center pt-2 sm:pt-0">
+            <div className="flex items-center gap-2 text-sm text-gray-600 self-start sm:self-center pt-2 sm:pt-0">
               {getStatusIndicator(brevoDetails)}
               <span>{getStatusText(brevoDetails, 'Brevo')}</span>
             </div>
@@ -379,21 +379,22 @@ export default function IntegrationsPage() {
                   onChange={(e) => setBrevoApiKeyInput(e.target.value)}
                   disabled={isBrevoSaving || isBrevoDisconnecting || isPending}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-600">
                   Find your API key in Brevo: SMTP & API &gt; API Keys.
                   <a 
                     href="https://app.brevo.com/settings/keys/api" 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="ml-1 text-primary hover:underline"
+                    className="ml-1 text-black hover:text-gray-700 font-medium transition-colors duration-200"
+                    style={{letterSpacing: '-0.01em'}}
                   >
                     Go to Brevo <ExternalLink className="inline h-3 w-3" />
                   </a>
                 </p>
               </div>
                {brevoDetails?.apiKeySet && brevoDetails?.maskedApiKey && (
-                 <p className="text-sm text-muted-foreground">
-                    An API key is currently saved: <span className="font-mono">{brevoDetails.maskedApiKey}</span>. 
+                 <p className="text-sm text-gray-600">
+                    An API key is currently saved: <span className="font-mono text-black">{brevoDetails.maskedApiKey}</span>. 
                     Enter a new key above to update it.
                  </p>
                )}
@@ -403,7 +404,8 @@ export default function IntegrationsPage() {
                 {brevoDetails?.apiKeySet && (
                   <Button
                     type="button"
-                    variant="destructive"
+                    className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
+                    style={{letterSpacing: '-0.01em'}}
                     onClick={handleDisconnectBrevo}
                     disabled={isBrevoSaving || isBrevoDisconnecting || isPending}
                   >
@@ -412,7 +414,7 @@ export default function IntegrationsPage() {
                   </Button>
                 )}
               </div>
-              <Button type="submit" variant="default" disabled={isBrevoSaving || isBrevoDisconnecting || isPending || !brevoApiKeyInput.trim()} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              <Button type="submit" className="bg-black hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}} disabled={isBrevoSaving || isBrevoDisconnecting || isPending || !brevoApiKeyInput.trim()}>
                 {isBrevoSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {brevoDetails?.apiKeySet ? 'Update API Key' : 'Connect Brevo'}
               </Button>
@@ -421,18 +423,18 @@ export default function IntegrationsPage() {
         </Card>
 
         {/* Mailgun Integration Card */}
-        <Card className="shadow-lg">
+        <Card className="border border-gray-200 rounded-2xl shadow-sm">
           <CardHeader className="flex flex-col sm:flex-row items-start justify-between">
             <div className="flex items-center gap-3 mb-2 sm:mb-0">
               <MailgunLogoSvg />
                <div>
-                <CardTitle className="text-xl">
+                <CardTitle className="text-xl text-black font-semibold" style={{letterSpacing: '-0.01em'}}>
                   Mailgun (Email Provider)
                 </CardTitle>
-                <CardDescription>Connect your Mailgun account to send emails.</CardDescription>
+                <CardDescription className="text-gray-600">Connect your Mailgun account to send emails.</CardDescription>
               </div>
             </div>
-             <div className="flex items-center gap-2 text-sm text-muted-foreground self-start sm:self-center pt-2 sm:pt-0">
+             <div className="flex items-center gap-2 text-sm text-gray-600 self-start sm:self-center pt-2 sm:pt-0">
               {getStatusIndicator(mailgunDetails)}
               <span>{getStatusText(mailgunDetails, 'Mailgun')}</span>
             </div>
@@ -451,8 +453,8 @@ export default function IntegrationsPage() {
                     disabled={isMailgunSaving || isMailgunDisconnecting || isPending}
                   />
                    {mailgunDetails?.apiKeySet && mailgunDetails?.maskedApiKey && (
-                    <p className="text-xs text-muted-foreground">
-                        Saved key: <span className="font-mono">{mailgunDetails.maskedApiKey}</span>. Enter new to update.
+                    <p className="text-xs text-gray-600">
+                        Saved key: <span className="font-mono text-black">{mailgunDetails.maskedApiKey}</span>. Enter new to update.
                     </p>
                    )}
                 </div>
@@ -483,13 +485,14 @@ export default function IntegrationsPage() {
                     <SelectItem value="eu">EU (api.eu.mailgun.net)</SelectItem>
                   </SelectContent>
                 </Select>
-                 <p className="text-xs text-muted-foreground">
+                 <p className="text-xs text-gray-600">
                   Find your API key and domain in Mailgun settings.
                   <a 
                     href="https://app.mailgun.com/app/sending/domains" 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="ml-1 text-primary hover:underline"
+                    className="ml-1 text-black hover:text-gray-700 font-medium transition-colors duration-200"
+                    style={{letterSpacing: '-0.01em'}}
                   >
                     Go to Mailgun <ExternalLink className="inline h-3 w-3" />
                   </a>
@@ -501,7 +504,8 @@ export default function IntegrationsPage() {
                 {mailgunDetails?.apiKeySet && (
                   <Button
                     type="button"
-                    variant="destructive"
+                    className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
+                    style={{letterSpacing: '-0.01em'}}
                     onClick={handleDisconnectMailgun}
                     disabled={isMailgunSaving || isMailgunDisconnecting || isPending}
                   >
@@ -512,9 +516,9 @@ export default function IntegrationsPage() {
               </div>
               <Button 
                 type="submit" 
-                variant="default" 
+                className="bg-black hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200"
+                style={{letterSpacing: '-0.01em'}}
                 disabled={isMailgunSaving || isMailgunDisconnecting || isPending || !mailgunApiKeyInput.trim() || !mailgunDomainInput.trim()} 
-                className="bg-accent hover:bg-accent/90 text-accent-foreground"
               >
                 {isMailgunSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {mailgunDetails?.apiKeySet ? 'Update Mailgun' : 'Connect Mailgun'}
@@ -524,16 +528,16 @@ export default function IntegrationsPage() {
         </Card>
 
         {/* Amazon SES Integration Card */}
-        <Card className="shadow-lg">
+        <Card className="border border-gray-200 rounded-2xl shadow-sm">
           <CardHeader className="flex flex-col sm:flex-row items-start justify-between">
             <div className="flex items-center gap-3 mb-2 sm:mb-0">
               <AmazonSESLogoSvg />
               <div>
-                <CardTitle className="text-xl">Amazon SES (Email Provider)</CardTitle>
-                <CardDescription>Connect your AWS SES account to send emails.</CardDescription>
+                <CardTitle className="text-xl text-black font-semibold" style={{letterSpacing: '-0.01em'}}>Amazon SES (Email Provider)</CardTitle>
+                <CardDescription className="text-gray-600">Connect your AWS SES account to send emails.</CardDescription>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground self-start sm:self-center pt-2 sm:pt-0">
+            <div className="flex items-center gap-2 text-sm text-gray-600 self-start sm:self-center pt-2 sm:pt-0">
               {getStatusIndicator(sesDetails)}
               <span>{getStatusText(sesDetails, 'Amazon SES')}</span>
             </div>
@@ -551,8 +555,8 @@ export default function IntegrationsPage() {
                   disabled={isSesSaving || isSesDisconnecting || isPending}
                 />
                 {sesDetails?.accessKeyIdSet && sesDetails?.maskedAccessKeyId && (
-                    <p className="text-xs text-muted-foreground">
-                        Saved Access Key ID: <span className="font-mono">{sesDetails.maskedAccessKeyId}</span>. Enter new to update.
+                    <p className="text-xs text-gray-600">
+                        Saved Access Key ID: <span className="font-mono text-black">{sesDetails.maskedAccessKeyId}</span>. Enter new to update.
                     </p>
                 )}
               </div>
@@ -567,7 +571,7 @@ export default function IntegrationsPage() {
                   disabled={isSesSaving || isSesDisconnecting || isPending}
                 />
                  {sesDetails?.secretAccessKeySet && ( // We don't show masked secret, just indicate it's set
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-gray-600">
                         A Secret Access Key is currently saved. Enter a new key to update it.
                     </p>
                 )}
@@ -588,13 +592,14 @@ export default function IntegrationsPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-600">
                   Ensure this is the region where your SES is configured and identities are verified.
                   <a 
                     href="https://docs.aws.amazon.com/ses/latest/dg/regions.html" 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="ml-1 text-primary hover:underline"
+                    className="ml-1 text-black hover:text-gray-700 font-medium transition-colors duration-200"
+                    style={{letterSpacing: '-0.01em'}}
                   >
                     AWS Regions <ExternalLink className="inline h-3 w-3" />
                   </a>
@@ -606,7 +611,8 @@ export default function IntegrationsPage() {
                 {sesDetails?.connected && (
                   <Button
                     type="button"
-                    variant="destructive"
+                    className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200"
+                    style={{letterSpacing: '-0.01em'}}
                     onClick={handleDisconnectAmazonSES}
                     disabled={isSesSaving || isSesDisconnecting || isPending}
                   >
@@ -617,9 +623,9 @@ export default function IntegrationsPage() {
               </div>
               <Button
                 type="submit"
-                variant="default"
+                className="bg-black hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200"
+                style={{letterSpacing: '-0.01em'}}
                 disabled={isSesSaving || isSesDisconnecting || isPending || !sesAccessKeyIdInput.trim() || !sesSecretAccessKeyInput.trim() || !sesRegionInput.trim()}
-                className="bg-accent hover:bg-accent/90 text-accent-foreground"
               >
                 {isSesSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {sesDetails?.connected ? 'Update SES Credentials' : 'Connect Amazon SES'}
@@ -629,14 +635,14 @@ export default function IntegrationsPage() {
         </Card>
 
         {/* API Keys Management Card */}
-        <Card className="shadow-lg">
+        <Card className="border border-gray-200 rounded-2xl shadow-sm">
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div>
-                        <CardTitle className="text-xl flex items-center gap-2">
+                        <CardTitle className="text-xl flex items-center gap-2 text-black font-semibold" style={{letterSpacing: '-0.01em'}}>
                             <KeyRound className="h-5 w-5"/> API Keys
                         </CardTitle>
-                        <CardDescription>Manage API keys for programmatic access to PlaneMail.</CardDescription>
+                        <CardDescription className="text-gray-600">Manage API keys for programmatic access to PlaneMail.</CardDescription>
                     </div>
                     <Dialog open={showNewApiKeyDialog} onOpenChange={(open) => {
                         setShowNewApiKeyDialog(open);
@@ -646,7 +652,7 @@ export default function IntegrationsPage() {
                         }
                     }}>
                         <DialogTrigger asChild>
-                            <Button variant="default" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                            <Button className="bg-black hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
                                 <PlusCircle className="mr-2 h-4 w-4" /> Generate New Key
                             </Button>
                         </DialogTrigger>
@@ -672,9 +678,9 @@ export default function IntegrationsPage() {
                                     {generatedApiKey && (
                                         <div className="space-y-2">
                                             <Label>Your New API Key</Label>
-                                            <Alert variant="default" className="bg-green-50 border-green-300">
+                                            <Alert variant="default" className="bg-green-50 border-green-200">
                                                 <AlertTriangle className="h-4 w-4 text-green-600" />
-                                                <AlertTitle className="text-green-700">Copy this key now!</AlertTitle>
+                                                <AlertTitle className="text-green-700 font-medium" style={{letterSpacing: '-0.01em'}}>Copy this key now!</AlertTitle>
                                                 <AlertDescription className="text-green-600 text-xs">
                                                     You will not be able to see it again. Store it securely.
                                                 </AlertDescription>
@@ -697,8 +703,8 @@ export default function IntegrationsPage() {
                                         }}>Close</Button>
                                      ) : (
                                         <>
-                                        <Button type="button" variant="outline" onClick={() => setShowNewApiKeyDialog(false)} disabled={isApiKeyGenerating}>Cancel</Button>
-                                        <Button type="submit" disabled={isApiKeyGenerating || !newApiKeyName.trim()} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                                        <Button type="button" variant="outline" onClick={() => setShowNewApiKeyDialog(false)} disabled={isApiKeyGenerating} className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>Cancel</Button>
+                                        <Button type="submit" disabled={isApiKeyGenerating || !newApiKeyName.trim()} className="bg-black hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
                                             {isApiKeyGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                             Generate Key
                                         </Button>
@@ -712,25 +718,25 @@ export default function IntegrationsPage() {
             </CardHeader>
             <CardContent>
                 {userApiKeys.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-4 text-center">No API keys generated yet.</p>
+                    <p className="text-sm text-gray-600 py-4 text-center">No API keys generated yet.</p>
                 ) : (
                     <Table>
                         <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Prefix</TableHead>
-                                <TableHead>Created At</TableHead>
-                                <TableHead>Last Used</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                            <TableRow className="border-b border-gray-200">
+                                <TableHead className="text-black font-medium" style={{letterSpacing: '-0.01em'}}>Name</TableHead>
+                                <TableHead className="text-black font-medium" style={{letterSpacing: '-0.01em'}}>Prefix</TableHead>
+                                <TableHead className="text-black font-medium" style={{letterSpacing: '-0.01em'}}>Created At</TableHead>
+                                <TableHead className="text-black font-medium" style={{letterSpacing: '-0.01em'}}>Last Used</TableHead>
+                                <TableHead className="text-right text-black font-medium" style={{letterSpacing: '-0.01em'}}>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {userApiKeys.map((key) => (
-                                <TableRow key={key.id}>
-                                    <TableCell className="font-medium">{key.name}</TableCell>
-                                    <TableCell className="font-mono text-xs">{key.prefix}...</TableCell>
-                                    <TableCell>{format(new Date(key.createdAt), 'PPpp')}</TableCell>
-                                    <TableCell>{key.lastUsedAt ? format(new Date(key.lastUsedAt), 'PPp') : 'Never'}</TableCell>
+                                <TableRow key={key.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200">
+                                    <TableCell className="font-medium text-black" style={{letterSpacing: '-0.01em'}}>{key.name}</TableCell>
+                                    <TableCell className="font-mono text-xs text-gray-600">{key.prefix}...</TableCell>
+                                    <TableCell className="text-gray-600">{format(new Date(key.createdAt), 'PPpp')}</TableCell>
+                                    <TableCell className="text-gray-600">{key.lastUsedAt ? format(new Date(key.lastUsedAt), 'PPp') : 'Never'}</TableCell>
                                     <TableCell className="text-right">
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
@@ -747,7 +753,7 @@ export default function IntegrationsPage() {
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleRevokeApiKey(key.id)} variant="destructive">
+                                                    <AlertDialogAction onClick={() => handleRevokeApiKey(key.id)} className="bg-red-600 hover:bg-red-700 text-white">
                                                         Revoke Key
                                                     </AlertDialogAction>
                                                 </AlertDialogFooter>

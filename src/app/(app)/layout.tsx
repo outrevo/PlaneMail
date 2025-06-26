@@ -73,10 +73,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const displayEmail = user?.primaryEmailAddress?.emailAddress;
 
   return (
-    <div className="flex min-h-screen bg-background font-mono">
+    <div className="flex min-h-screen bg-white">
       <SidebarProvider defaultOpen>
-        <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r border-neutral-200">
-          <SidebarHeader className="p-6 border-b border-neutral-200">
+        <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r border-gray-200">
+          <SidebarHeader className="p-4 border-b border-gray-200">
             <Logo />
           </SidebarHeader>
           <SidebarContent className="p-2">
@@ -87,11 +87,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     asChild
                     isActive={pathname.startsWith(item.href)} 
                     tooltip={item.label}
-                    className="font-mono hover:bg-neutral-100 data-[active=true]:bg-black data-[active=true]:text-white rounded-md"
+                    className="hover:bg-gray-100 data-[active=true]:bg-black data-[active=true]:text-white rounded-lg transition-colors duration-200"
+                    style={{letterSpacing: '-0.01em'}}
                   >
                     <Link href={item.href}>
                       <item.icon className="h-4 w-4" />
-                      <span className="text-sm">{item.label}</span>
+                      <span className="text-sm font-medium">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -102,12 +103,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="mt-auto pt-6">
               <SidebarSeparator className="mb-4" />
               <div className="px-3 py-2">
-                <p className="text-xs text-neutral-500 mb-2 font-mono">OPEN SOURCE</p>
+                <p className="text-xs text-gray-500 mb-2 font-medium" style={{letterSpacing: '-0.01em'}}>OPEN SOURCE</p>
                 <a
                   href="https://github.com/outrevo/PlaneMail"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs text-neutral-600 hover:text-black transition-colors"
+                  className="flex items-center gap-2 text-xs text-gray-600 hover:text-black transition-colors duration-200"
+                  style={{letterSpacing: '-0.01em'}}
                 >
                   <Github className="h-3 w-3" />
                   <span>View on GitHub</span>
@@ -116,7 +118,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </SidebarContent>
           
-          <SidebarFooter className="p-4 border-t border-neutral-200">
+          <SidebarFooter className="p-4 border-t border-gray-200">
             {!isLoaded ? (
                <div className="flex items-center gap-3">
                   <Skeleton className="h-8 w-8 rounded-full" />
@@ -137,8 +139,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   }}
                 />
                 <div className="group-data-[collapsible=icon]:hidden flex flex-col">
-                  <span className="text-sm font-medium text-neutral-900 truncate max-w-[120px]">{displayName}</span>
-                  {displayEmail && <span className="text-xs text-neutral-500 truncate max-w-[150px]">{displayEmail}</span>}
+                  <span className="text-sm font-medium text-black truncate max-w-[120px]" style={{letterSpacing: '-0.01em'}}>{displayName}</span>
+                  {displayEmail && <span className="text-xs text-gray-500 truncate max-w-[150px]">{displayEmail}</span>}
                 </div>
               </div>
             ) : null}
@@ -146,7 +148,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </Sidebar>
         
         <SidebarInset className="flex-1">
-          <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-neutral-200 bg-white/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-white/80 md:justify-end">
+          <header className="sticky top-0 z-10 flex h-11 items-center justify-between border-b border-gray-200 bg-white px-6 md:justify-end">
             <div className="md:hidden">
               <SidebarTrigger />
             </div>
@@ -154,7 +156,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               {isLoaded && user && <UserButton afterSignOutUrl="/" />}
             </div>
           </header>
-          <main className="flex-1 p-6 bg-neutral-50/50">{children}</main>
+          <main className="flex-1 p-6 bg-gray-50">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     </div>

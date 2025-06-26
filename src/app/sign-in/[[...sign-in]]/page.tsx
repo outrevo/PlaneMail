@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function SignInPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-white p-6">
        <div className="mb-8">
         <Link href="/" aria-label="Go to homepage">
           <Logo />

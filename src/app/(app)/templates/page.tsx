@@ -18,16 +18,16 @@ async function TemplatesList() {
 
   if (templates.length === 0) {
     return (
-      <Card className="text-center py-12 col-span-full">
+      <Card className="text-center py-12 col-span-full border border-gray-200 rounded-2xl shadow-sm">
         <CardHeader>
-          <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
-          <CardTitle className="mt-4">No Templates Yet</CardTitle>
-          <CardDescription>
+          <FileText className="mx-auto h-12 w-12 text-gray-400" />
+          <CardTitle className="mt-4 text-xl font-semibold text-black" style={{letterSpacing: '-0.01em'}}>No Templates Yet</CardTitle>
+          <CardDescription className="text-gray-600">
             Start by creating your first email template.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button asChild>
+          <Button asChild className="bg-black hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
             <Link href="/templates/editor">
               <PlusCircle className="mr-2 h-4 w-4" /> Create Template
             </Link>
@@ -40,8 +40,8 @@ async function TemplatesList() {
   return (
     <>
       {templates.map((template: TemplateSchemaType) => ( // Use imported type
-        <Card key={template.id} className="flex flex-col overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-200">
-          <div className="aspect-[3/2] w-full overflow-hidden bg-muted">
+        <Card key={template.id} className="flex flex-col overflow-hidden border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200">
+          <div className="aspect-[3/2] w-full overflow-hidden bg-gray-50">
             <Image 
               src={template.previewImageUrl || `https://placehold.co/600x400.png?text=${encodeURIComponent(template.name)}`} 
               alt={template.name} 
@@ -52,37 +52,37 @@ async function TemplatesList() {
             />
           </div>
           <CardHeader className="flex-grow p-4">
-            <CardTitle className="text-lg">{template.name}</CardTitle>
-            <CardDescription>Last modified: {template.updatedAt ? new Date(template.updatedAt).toLocaleDateString() : 'N/A'}</CardDescription>
-            {template.category && <CardDescription>Category: {template.category}</CardDescription>}
+            <CardTitle className="text-lg text-black font-semibold" style={{letterSpacing: '-0.01em'}}>{template.name}</CardTitle>
+            <CardDescription className="text-gray-600">Last modified: {template.updatedAt ? new Date(template.updatedAt).toLocaleDateString() : 'N/A'}</CardDescription>
+            {template.category && <CardDescription className="text-gray-600">Category: {template.category}</CardDescription>}
           </CardHeader>
-          <CardFooter className="p-4 border-t">
-            <Button variant="outline" size="sm" asChild className="flex-1">
+          <CardFooter className="p-4 border-t border-gray-200">
+            <Button variant="outline" size="sm" asChild className="flex-1 border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
               <Link href={`/templates/editor/${template.id}`}>
                 <Edit3 className="mr-2 h-4 w-4" /> Edit
               </Link>
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="ml-2 text-muted-foreground hover:text-destructive">
+                <Button variant="ghost" size="icon" className="ml-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200">
                   <Trash2 className="h-4 w-4" />
                   <span className="sr-only">Delete</span>
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="border border-gray-200 rounded-2xl bg-white">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
+                  <AlertDialogTitle className="text-black font-semibold" style={{letterSpacing: '-0.01em'}}>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-gray-600">
                     This action cannot be undone. This will permanently delete the template "{template.name}".
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>Cancel</AlertDialogCancel>
                   <form action={async () => {
                     'use server';
                     await deleteTemplate(template.id);
                   }}>
-                    <AlertDialogAction type="submit" className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                    <AlertDialogAction type="submit" className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>Delete</AlertDialogAction>
                   </form>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -102,7 +102,7 @@ export default function TemplatesPage() {
         title="Email Templates"
         description="Manage your email templates or create new ones."
         actions={
-          <Button asChild>
+          <Button asChild className="bg-black hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
             <Link href="/templates/editor/new">
               <PlusCircle className="mr-2 h-4 w-4" /> Create New Template
             </Link>
@@ -112,10 +112,10 @@ export default function TemplatesPage() {
 
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search templates..." className="pl-10" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Input placeholder="Search templates..." className="pl-10 border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent" />
         </div>
-        <Button variant="outline">
+        <Button variant="outline" className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
           <Filter className="mr-2 h-4 w-4" /> Filter
         </Button>
       </div>

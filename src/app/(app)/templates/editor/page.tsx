@@ -22,8 +22,8 @@ export default function TemplateEditorBasePage() {
 
   return (
     <div className="flex h-[calc(100vh-theme(spacing.14)-2*theme(spacing.8))] flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-2 text-muted-foreground">Redirecting to template editor...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-black" />
+        <p className="mt-2 text-gray-600">Redirecting to template editor...</p>
     </div>
   );
 }

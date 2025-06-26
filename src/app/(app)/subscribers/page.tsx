@@ -18,9 +18,11 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getSubscribers, addSubscriber, updateSubscriber, deleteSubscriber, getSegments, createSegment } from './actions';
-import type { subscribers as SubscriberType, segments as SegmentType } from '@/db/schema';
+import type { subscribers, segments } from '@/db/schema';
 import { ImportSubscribersDialog } from './components/ImportSubscribersDialog'; // New component
 
+type SubscriberType = typeof subscribers.$inferSelect;
+type SegmentType = typeof segments.$inferSelect;
 type SubscriberWithSegments = SubscriberType & { segments: Pick<SegmentType, 'id' | 'name'>[] };
 
 export default function SubscribersPage() {
@@ -100,7 +102,7 @@ export default function SubscribersPage() {
     setName(subscriber.name || '');
     setEmail(subscriber.email);
     setStatus(subscriber.status);
-    setCurrentSegments(subscriber.segments.map(s => s.id));
+    setCurrentSegments(subscriber.segments.map((s: Pick<SegmentType, 'id' | 'name'>) => s.id));
     setIsAddDialogOpen(true);
   };
 
@@ -181,10 +183,10 @@ export default function SubscribersPage() {
         description="Manage your audience and segments."
         actions={
           <div className="flex gap-2">
-            <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" disabled={isPending}>
+            <Button onClick={() => setIsImportDialogOpen(true)} variant="outline" disabled={isPending} className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
               <UploadCloud className="mr-2 h-4 w-4" /> Import Subscribers
             </Button>
-            <Button onClick={openAddDialog} disabled={isPending}>
+            <Button onClick={openAddDialog} disabled={isPending} className="bg-black hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
               <PlusCircle className="mr-2 h-4 w-4" /> Add Subscriber
             </Button>
           </div>
@@ -193,62 +195,63 @@ export default function SubscribersPage() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input 
             placeholder="Search by name or email..." 
-            className="pl-10" 
+            className="pl-10 border-gray-200 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             disabled={isPending}
           />
         </div>
         <div className="flex gap-2">
-            <Button variant="outline" disabled={isPending}>
+            <Button variant="outline" disabled={isPending} className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
                 <Filter className="mr-2 h-4 w-4" /> Filter
             </Button>
-            <Button variant="outline" onClick={() => setIsManageSegmentsDialogOpen(true)} disabled={isPending}>
+            <Button variant="outline" onClick={() => setIsManageSegmentsDialogOpen(true)} disabled={isPending} className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
                 <Tags className="mr-2 h-4 w-4" /> Manage Segments
             </Button>
         </div>
       </div>
 
-      <Card className="shadow-sm">
+      <Card className="border border-gray-200 rounded-2xl shadow-sm">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="flex items-center justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="ml-2">Loading subscribers...</p>
+              <Loader2 className="h-8 w-8 animate-spin text-black" />
+              <p className="ml-2 text-gray-600">Loading subscribers...</p>
             </div>
           ) : subscribers.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[50px]">
-                    <Checkbox 
-                      checked={selectedSubscribers.length === subscribers.length && subscribers.length > 0 ? true : (selectedSubscribers.length > 0 ? 'indeterminate' : false)}
-                      onCheckedChange={handleSelectAll}
-                      disabled={isPending}
-                    />
-                  </TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Segments</TableHead>
-                  <TableHead>Date Added</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {subscribers.map((sub) => (
-                  <TableRow key={sub.id} data-state={selectedSubscribers.includes(sub.id) ? "selected" : ""}>
-                    <TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-gray-200">
+                    <TableHead className="w-[50px]">
                       <Checkbox 
-                        checked={selectedSubscribers.includes(sub.id)}
-                        onCheckedChange={(checked) => handleSelectRow(sub.id, !!checked)}
+                        checked={selectedSubscribers.length === subscribers.length && subscribers.length > 0 ? true : (selectedSubscribers.length > 0 ? 'indeterminate' : false)}
+                        onCheckedChange={handleSelectAll}
                         disabled={isPending}
                       />
-                    </TableCell>
-                    <TableCell className="font-medium">{sub.name || '-'}</TableCell>
+                    </TableHead>
+                    <TableHead className="text-black font-medium" style={{letterSpacing: '-0.01em'}}>Name</TableHead>
+                    <TableHead className="text-black font-medium" style={{letterSpacing: '-0.01em'}}>Email</TableHead>
+                    <TableHead className="text-black font-medium" style={{letterSpacing: '-0.01em'}}>Status</TableHead>
+                    <TableHead className="text-black font-medium" style={{letterSpacing: '-0.01em'}}>Segments</TableHead>
+                    <TableHead className="text-black font-medium" style={{letterSpacing: '-0.01em'}}>Date Added</TableHead>
+                    <TableHead className="text-right text-black font-medium" style={{letterSpacing: '-0.01em'}}>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {subscribers.map((sub) => (
+                    <TableRow key={sub.id} data-state={selectedSubscribers.includes(sub.id) ? "selected" : ""} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200">
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedSubscribers.includes(sub.id)}
+                          onCheckedChange={(checked) => handleSelectRow(sub.id, !!checked)}
+                          disabled={isPending}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium text-black" style={{letterSpacing: '-0.01em'}}>{sub.name || '-'}</TableCell>
                     <TableCell>{sub.email}</TableCell>
                     <TableCell>
                       <Badge variant={sub.status === 'active' ? 'default' : (sub.status === 'unsubscribed' ? 'secondary' : 'destructive')}
@@ -262,8 +265,8 @@ export default function SubscribersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">
-                        {sub.segments.map(seg => <Badge key={seg.id} variant="outline" className="mr-1 mb-1 text-xs">{seg.name}</Badge>)}
-                        {sub.segments.length === 0 && <span className="text-xs text-muted-foreground">-</span>}
+                        {sub.segments.map((seg: Pick<SegmentType, 'id' | 'name'>) => <Badge key={seg.id} variant="outline" className="mr-1 mb-1 text-xs">{seg.name}</Badge>)}
+                        {sub.segments.length === 0 && <span className="text-xs text-gray-600">-</span>}
                     </TableCell>
                     <TableCell>{new Date(sub.dateAdded).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
@@ -292,7 +295,7 @@ export default function SubscribersPage() {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(sub.id)} variant="destructive" disabled={isPending}>
+                                <AlertDialogAction onClick={() => handleDelete(sub.id)} className="bg-red-600 hover:bg-red-700 text-white" disabled={isPending}>
                                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                     Delete
                                 </AlertDialogAction>
@@ -306,10 +309,11 @@ export default function SubscribersPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           ) : (
             <div className="py-12 text-center">
-              <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-              <p className="mt-4 text-muted-foreground">
+              <Users className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="mt-4 text-gray-600">
                 No subscribers found{searchTerm ? ' matching your search' : ''}, or you haven't added any yet.
               </p>
             </div>
@@ -317,11 +321,11 @@ export default function SubscribersPage() {
         </CardContent>
       </Card>
       {selectedSubscribers.length > 0 && (
-        <div className="fixed bottom-4 right-4 rounded-lg border bg-card p-4 shadow-lg">
-          <p className="text-sm font-medium">{selectedSubscribers.length} subscriber(s) selected</p>
+        <div className="fixed bottom-4 right-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <p className="text-sm font-medium text-black" style={{letterSpacing: '-0.01em'}}>{selectedSubscribers.length} subscriber(s) selected</p>
           <div className="mt-2 flex gap-2">
-            <Button size="sm" variant="outline" disabled={isPending}>Bulk Actions</Button>
-            <Button size="sm" variant="destructive" onClick={() => setSelectedSubscribers([])} disabled={isPending}>Deselect All</Button>
+            <Button size="sm" className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}} disabled={isPending}>Bulk Actions</Button>
+            <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}} onClick={() => setSelectedSubscribers([])} disabled={isPending}>Deselect All</Button>
           </div>
         </div>
       )}
@@ -362,7 +366,7 @@ export default function SubscribersPage() {
               <div className="grid grid-cols-4 items-start gap-4">
                 <Label className="text-right pt-2">Segments</Label>
                 <div className="col-span-3 flex flex-wrap gap-2">
-                  {segmentsList.length === 0 && <p className="text-xs text-muted-foreground">No segments available. Create one in 'Manage Segments'.</p>}
+                  {segmentsList.length === 0 && <p className="text-xs text-gray-600">No segments available. Create one in 'Manage Segments'.</p>}
                   {segmentsList.map(seg => (
                       <Button 
                           key={seg.id} 
@@ -380,8 +384,8 @@ export default function SubscribersPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isSaving}>Cancel</Button>
-              <Button type="submit" disabled={isSaving} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isSaving} className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>Cancel</Button>
+              <Button type="submit" disabled={isSaving} className="bg-black hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                 {editingSubscriber ? 'Save Changes' : 'Add Subscriber'}
               </Button>
@@ -399,7 +403,7 @@ export default function SubscribersPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <form onSubmit={handleCreateNewSegment} className="space-y-3">
-              <h4 className="font-medium">Create New Segment</h4>
+              <h4 className="font-medium text-black" style={{letterSpacing: '-0.01em'}}>Create New Segment</h4>
               <div>
                 <Label htmlFor="newSegmentName">Segment Name</Label>
                 <Input id="newSegmentName" value={newSegmentName} onChange={(e) => setNewSegmentName(e.target.value)} placeholder="E.g., VIP Customers" required />
@@ -408,14 +412,14 @@ export default function SubscribersPage() {
                 <Label htmlFor="newSegmentDescription">Description (Optional)</Label>
                 <Textarea id="newSegmentDescription" value={newSegmentDescription} onChange={(e) => setNewSegmentDescription(e.target.value)} placeholder="Internal notes about this segment" />
               </div>
-              <Button type="submit" disabled={isSaving || isPending} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+              <Button type="submit" disabled={isSaving || isPending} className="w-full bg-black hover:bg-gray-900 text-white font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>} Create Segment
               </Button>
             </form>
             <div className="space-y-2">
-              <h4 className="font-medium">Existing Segments</h4>
-              {isLoading && <p className="text-xs text-muted-foreground">Loading segments...</p>}
-              {!isLoading && segmentsList.length === 0 && <p className="text-xs text-muted-foreground">No segments created yet.</p>}
+              <h4 className="font-medium text-black" style={{letterSpacing: '-0.01em'}}>Existing Segments</h4>
+              {isLoading && <p className="text-xs text-gray-600">Loading segments...</p>}
+              {!isLoading && segmentsList.length === 0 && <p className="text-xs text-gray-600">No segments created yet.</p>}
               <div className="max-h-60 overflow-y-auto space-y-1 pr-2">
                 {segmentsList.map(segment => (
                   <div key={segment.id} className="flex justify-between items-center p-2 border rounded-md text-sm">
@@ -426,7 +430,7 @@ export default function SubscribersPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsManageSegmentsDialogOpen(false)}>Close</Button>
+            <Button variant="outline" onClick={() => setIsManageSegmentsDialogOpen(false)} className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

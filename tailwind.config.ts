@@ -11,11 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['var(--font-inter)', 'sans-serif'],
-        headline: ['var(--font-playfair-display)', 'serif'],
-        code: ['monospace'],
+        sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
-        sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -23,6 +20,18 @@ export default {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
+        },
+        // Liquid Glass Colors
+        glass: {
+          white: 'rgba(255, 255, 255, 0.8)',
+          'white-dark': 'rgba(255, 255, 255, 0.1)',
+          'white-light': 'rgba(255, 255, 255, 0.05)',
+          black: 'rgba(0, 0, 0, 0.8)',
+          'black-light': 'rgba(0, 0, 0, 0.1)',
+          'black-dark': 'rgba(0, 0, 0, 0.2)',
+          blue: 'rgba(0, 122, 255, 0.8)',
+          'blue-light': 'rgba(0, 122, 255, 0.1)',
+          'blue-dark': 'rgba(0, 122, 255, 0.2)',
         },
         popover: {
           DEFAULT: 'hsl(var(--popover))',
@@ -114,6 +123,10 @@ export default {
         // For light theme, base text is dark, shine is a subtle light overlay
         'metallic-shine': 'linear-gradient(to right, transparent, hsl(var(--foreground) / 0.05), transparent)', 
         'feature-card': 'linear-gradient(to bottom, hsl(var(--card)), hsl(var(--background) / 0.8))',
+        // Liquid Glass gradients
+        'glass-gradient': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0))',
+        'glass-border': 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
+        'glass-mesh': 'radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 40% 60%, rgba(120, 219, 255, 0.3) 0%, transparent 50%)',
       },
       backgroundSize: {
         '200%': '200% auto',
@@ -129,16 +142,12 @@ export default {
               },
             },
             'h1, h2, h3, h4, h5, h6': {
-              fontFamily: theme('fontFamily.headline').join(', '),
+              fontFamily: theme('fontFamily.sans').join(', '),
               color: theme('colors.foreground'),
             },
              // Add more styles for other elements if needed
           },
         },
-        // You can add a .dark variant if you ever re-introduce dark mode for editor content specifically
-        // invert: {
-        //   css: { ... }
-        // }
       }),
     },
   },

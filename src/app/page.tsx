@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ExternalLink, AlertCircle, CheckCircle, Github, Slack } from "lucide-react";
+import { ArrowRight, ExternalLink, AlertCircle, CheckCircle, Github, Slack, Link2, Target, Zap, Rocket, Gift, Users, Vote, Award, DollarSign, Unlock, Code } from "lucide-react";
 import { Logo } from "@/components/icons/Logo";
 import { useActionState } from "react"; // Updated import
 import { useFormStatus } from "react-dom";
@@ -71,108 +71,138 @@ export default function LandingPage() {
   }, [state]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground font-mono">
-      <header className="container mx-auto flex h-20 items-center justify-between px-4 py-4 relative z-10 border-b border-neutral-200">
-        <Logo />
-        <nav className="flex items-center gap-6">
-          <Link
-            href="/docs"
-            className="text-sm hover:text-primary transition-colors"
-          >
-            Docs
-          </Link>
-          <Link
-            href="#features"
-            className="text-sm hover:text-primary transition-colors"
-          >
-            Features
-          </Link>
-          <Link
-            href="https://github.com/outrevo/PlaneMail"
-            target="_blank"
-            className="text-sm hover:text-primary transition-colors flex items-center gap-1"
-          >
-            <Github className="h-4 w-4" />
-            <span>GitHub</span>
-          </Link>
-        </nav>
+    <div className="min-h-screen bg-white relative">
+      {/* Apple-style Header */}
+      <header className="relative z-50 bg-white sticky top-0 border-b border-gray-200">
+        <div className="container mx-auto flex h-11 items-center justify-between px-6 max-w-6xl">
+          <div>
+            <Logo />
+          </div>
+          <nav className="hidden md:flex items-center gap-8">
+            <Link
+              href="/pricing"
+              className="text-sm text-gray-800 hover:text-black transition-colors duration-200" 
+              style={{letterSpacing: '-0.01em'}}
+            >
+              Pricing
+            </Link>
+            <Link
+              href="/docs"
+              className="text-sm text-gray-800 hover:text-black transition-colors duration-200"
+              style={{letterSpacing: '-0.01em'}}
+            >
+              Documentation
+            </Link>
+            <Link
+              href="https://github.com/outrevo/PlaneMail"
+              target="_blank"
+              className="text-sm text-gray-800 hover:text-black transition-colors duration-200 flex items-center gap-1"
+              style={{letterSpacing: '-0.01em'}}
+            >
+              <Github className="h-4 w-4" />
+              <span>GitHub</span>
+            </Link>
+          </nav>
+        </div>
       </header>
 
-      <main className="flex-1">
+      <main className="relative">
         {/* Hero Section */}
-        <section className="container mx-auto px-4 py-24 md:py-32">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-2 mb-8">
-              <div className="bg-neutral-100 text-neutral-800 px-3 py-1 text-xs font-medium rounded-full">
+        <section className="container mx-auto px-6 py-24 md:py-32">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Trust Indicators */}
+            <div className="flex items-center justify-center gap-4 mb-12">
+              <div className="px-3 py-1 bg-gray-100 text-xs font-medium rounded-full text-gray-600">
                 Open Source
               </div>
-              <div className="h-4 w-px bg-neutral-300"></div>
-              <div className="text-neutral-500 text-xs">MIT License</div>
+              <div className="px-3 py-1 bg-gray-100 text-xs font-medium rounded-full text-gray-600">
+                MIT License
+              </div>
+              <div className="px-3 py-1 bg-gray-100 text-xs font-medium rounded-full text-gray-600">
+                Self-Hosted
+              </div>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-              The open-source
-              <br />newsletter platform
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight text-black" style={{letterSpacing: '-0.05em'}}>
+              Email infrastructure<br />built for developers
             </h1>
 
-            <p className="text-xl text-neutral-600 mb-8 max-w-2xl">
-              Use your own email provider. No vendor lock-in. Full control over
-              your data.
+            <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed" style={{letterSpacing: '-0.01em'}}>
+              Use your own email provider. No vendor lock-in.<br />
+              Complete control over your data and costs.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Button className="bg-[#4A154B] hover:bg-[#4A154B]/90 text-white rounded px-6 py-2.5 h-auto">
-                <a 
-                  href="https://join.slack.com/t/planemail/shared_invite/zt-37xn9nvet-PmOvbhYaUwsrJUf6mP7uEw"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center"
-                >
-                  <Slack className="mr-2 h-4 w-4" />
-                  <span>Join community now</span>
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </a>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="border-black/10 hover:border-black/30 rounded px-6 py-2.5 h-auto"
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
+              <a 
+                href="https://join.slack.com/t/planemail/shared_invite/zt-37xn9nvet-PmOvbhYaUwsrJUf6mP7uEw"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center px-6 py-2 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-900 transition-colors duration-200"
+                style={{letterSpacing: '-0.01em'}}
               >
-                <Link
-                  href="https://github.com/outrevo/PlaneMail"
-                  target="_blank"
-                  className="flex items-center"
-                >
-                  <Github className="mr-2 h-4 w-4" />
-                  <span>Star on GitHub</span>
-                </Link>
-              </Button>
+                <Slack className="mr-2 h-4 w-4" />
+                <span>Join Community</span>
+              </a>
+
+              <Link
+                href="https://github.com/outrevo/PlaneMail"
+                target="_blank"
+                className="inline-flex items-center justify-center px-6 py-2 bg-white text-black text-sm font-medium rounded-full border border-gray-200 hover:bg-gray-50 transition-colors duration-200"
+                style={{letterSpacing: '-0.01em'}}
+              >
+                <Github className="mr-2 h-4 w-4" />
+                <span>Star on GitHub</span>
+                <ExternalLink className="ml-2 h-3 w-3" />
+              </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12 text-sm">
-              <div>
-                <h3 className="font-semibold mb-1">BYOP (Bring Your Own Provider)</h3>
-                <p className="text-neutral-600">
-                  Connect AWS SES, SendGrid, Brevo, or any SMTP provider. No more
-                  paying per-subscriber fees.
+            {/* Feature Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-sm transition-shadow duration-300">
+                <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center mb-4">
+                  <Link2 className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-black" style={{letterSpacing: '-0.01em'}}>
+                  BYOP (Bring Your Own Provider)
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Connect AWS SES, SendGrid, Brevo, or any SMTP provider. No more paying per-subscriber fees.
                 </p>
               </div>
-              <div>
-                <h3 className="font-semibold mb-1">Full Ownership</h3>
-                <p className="text-neutral-600">
-                  Your data belongs to you. Self-host or use our cloud offering.
+              
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-sm transition-shadow duration-300">
+                <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center mb-4">
+                  <Target className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-black" style={{letterSpacing: '-0.01em'}}>
+                  Full Ownership
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Your data belongs to you. Self-host or use our cloud offering with complete control.
                 </p>
               </div>
-              <div>
-                <h3 className="font-semibold mb-1">Developer First</h3>
-                <p className="text-neutral-600">
-                  API-first architecture with complete documentation and examples.
+              
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-sm transition-shadow duration-300">
+                <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center mb-4">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-black" style={{letterSpacing: '-0.01em'}}>
+                  Developer First
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  API-first architecture with complete documentation and examples for seamless integration.
                 </p>
               </div>
-              <div>
-                <h3 className="font-semibold mb-1">Modern Stack</h3>
-                <p className="text-neutral-600">
-                  Built with Next.js, TypeScript, and the latest web standards.
+              
+              <div className="bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-sm transition-shadow duration-300">
+                <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center mb-4">
+                  <Rocket className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-black" style={{letterSpacing: '-0.01em'}}>
+                  Modern Stack
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Built with Next.js, TypeScript, and the latest web standards for maximum performance.
                 </p>
               </div>
             </div>
@@ -180,141 +210,173 @@ export default function LandingPage() {
         </section>
 
         {/* Why PlaneMail Section */}
-        <section className="bg-neutral-100 py-24">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl">
-              <h2 className="text-3xl font-bold mb-12">Why PlaneMail?</h2>
+        <section className="py-20 bg-gray-50">
+          <div className="container mx-auto px-6 max-w-5xl">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-black" style={{letterSpacing: '-0.04em'}}>
+                Why choose PlaneMail?
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto" style={{letterSpacing: '-0.01em'}}>
+                Break free from expensive email platforms that lock in your data and charge per subscriber.
+              </p>
+            </div>
 
-              <div className="space-y-16">
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="bg-black text-white w-8 h-8 rounded-full flex items-center justify-center font-medium">
-                      1
+            <div className="space-y-6">
+              <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex items-start gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center">
+                      <DollarSign className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold">Cost Efficiency</h3>
                   </div>
-                  <p className="text-neutral-600 pl-10">
-                    Traditional newsletter tools charge per subscriber, making
-                    costs unpredictable. With PlaneMail, use your own email
-                    provider and pay only for what you send.
-                    <span className="block mt-2 text-sm font-medium">
-                      Save up to 90% on email costs.
-                    </span>
-                  </p>
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="bg-black text-white w-8 h-8 rounded-full flex items-center justify-center font-medium">
-                      2
+                  <div>
+                    <h3 className="text-2xl font-bold mb-3 text-black" style={{letterSpacing: '-0.02em'}}>
+                      90% Cost Reduction
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed mb-3">
+                      Traditional newsletter tools charge per subscriber, making costs unpredictable. 
+                      With PlaneMail, use your own email provider and pay only for what you send.
+                    </p>
+                    <div className="inline-block px-3 py-1 bg-gray-100 rounded-full">
+                      <span className="text-xs font-medium text-gray-700">Save thousands monthly</span>
                     </div>
-                    <h3 className="text-xl font-semibold">
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex items-start gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center">
+                      <Unlock className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold mb-3 text-black" style={{letterSpacing: '-0.02em'}}>
                       Open Source & Transparent
                     </h3>
-                  </div>
-                  <p className="text-neutral-600 pl-10">
-                    No black boxes or proprietary lock-in. PlaneMail is 100%{" "}
-                    open-source, allowing full customization and extension. Our
-                    business model is built on transparency, not data lock-in.
-                    <span className="block mt-2 text-sm font-medium">
-                      Inspect the code. Contribute. Make it yours.
-                    </span>
-                  </p>
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="bg-black text-white w-8 h-8 rounded-full flex items-center justify-center font-medium">
-                      3
+                    <p className="text-gray-600 leading-relaxed mb-3">
+                      No black boxes or proprietary lock-in. PlaneMail is 100% open-source, 
+                      allowing full customization and extension with complete transparency.
+                    </p>
+                    <div className="inline-block px-3 py-1 bg-gray-100 rounded-full">
+                      <span className="text-xs font-medium text-gray-700">MIT Licensed</span>
                     </div>
-                    <h3 className="text-xl font-semibold">
-                      Designed for Developers
-                    </h3>
                   </div>
-                  <p className="text-neutral-600 pl-10">
-                    PlaneMail provides a simple API and CLI tools that integrate
-                    with your existing workflow. Deploy alongside your application
-                    or as a standalone service.
-                    <span className="block mt-2 text-sm font-medium">
-                      Modern API. Clean documentation. Developer experience first.
-                    </span>
-                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                <div className="flex items-start gap-6">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center">
+                      <Code className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold mb-3 text-black" style={{letterSpacing: '-0.02em'}}>
+                      Developer Experience First
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed mb-3">
+                      PlaneMail provides a simple API and CLI tools that integrate with your existing workflow. 
+                      Deploy alongside your application or as a standalone service.
+                    </p>
+                    <div className="inline-block px-3 py-1 bg-gray-100 rounded-full">
+                      <span className="text-xs font-medium text-gray-700">API-First</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Founding Users Section with updated form */}
-      <section className="bg-black text-white py-24">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl">
-            <h2 className="text-3xl font-bold mb-6">
-              Join the Founding Users Program
-            </h2>
-            <p className="text-neutral-400 mb-8">
-              We're looking for the first 100 users to help shape the future of
-              PlaneMail. Get exclusive benefits and direct input on our roadmap.
-            </p>
+        {/* Founding Users Section */}
+        <section className="py-20 bg-gray-50">
+          <div className="container mx-auto px-6 max-w-4xl">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-black" style={{letterSpacing: '-0.04em'}}>
+                Join the founding users
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto" style={{letterSpacing: '-0.01em'}}>
+                Be among the first 100 users to shape PlaneMail's future.
+              </p>
+            </div>
 
-            <div className="border border-white/10 rounded-lg p-8 mb-8">
+            <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="flex gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary flex-shrink-0 mt-0.5"></div>
+                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Gift className="h-4 w-4 text-white" />
+                  </div>
                   <div>
-                    <h3 className="font-medium mb-1">Free Premium Features</h3>
-                    <p className="text-neutral-400 text-sm">
-                      Lifetime access to premium features at no cost.
+                    <h3 className="font-semibold mb-1 text-black">Free premium features</h3>
+                    <p className="text-sm text-gray-600">
+                      Lifetime access to premium features
                     </p>
                   </div>
                 </div>
                 
                 <div className="flex gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary flex-shrink-0 mt-0.5"></div>
+                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Zap className="h-4 w-4 text-white" />
+                  </div>
                   <div>
-                    <h3 className="font-medium mb-1">Priority Support</h3>
-                    <p className="text-neutral-400 text-sm">
-                      Direct line to our engineering team.
+                    <h3 className="font-semibold mb-1 text-black">Priority support</h3>
+                    <p className="text-sm text-gray-600">
+                      Direct line to our engineering team
                     </p>
                   </div>
                 </div>
                 
                 <div className="flex gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary flex-shrink-0 mt-0.5"></div>
+                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Vote className="h-4 w-4 text-white" />
+                  </div>
                   <div>
-                    <h3 className="font-medium mb-1">Shape the Roadmap</h3>
-                    <p className="text-neutral-400 text-sm">
-                      Vote on features and influence development priorities.
+                    <h3 className="font-semibold mb-1 text-black">Shape the roadmap</h3>
+                    <p className="text-sm text-gray-600">
+                      Vote on features and development priorities
                     </p>
                   </div>
                 </div>
                 
                 <div className="flex gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary flex-shrink-0 mt-0.5"></div>
+                  <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Award className="h-4 w-4 text-white" />
+                  </div>
                   <div>
-                    <h3 className="font-medium mb-1">Recognition</h3>
-                    <p className="text-neutral-400 text-sm">
-                      Your name in our GitHub repository as a founding user.
+                    <h3 className="font-semibold mb-1 text-black">Recognition</h3>
+                    <p className="text-sm text-gray-600">
+                      Listed as a founding user in our repository
                     </p>
                   </div>
                 </div>
               </div>
 
-              <form action={formAction} className="flex flex-col sm:flex-row gap-3">
+              <form action={formAction} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                 <input
                   type="email"
                   name="email"
                   placeholder="Your email address"
-                  className="flex h-10 w-full rounded bg-white/10 border border-white/20 px-3 py-2 text-sm text-white"
+                  className="flex-1 h-10 px-3 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
                   required
                   aria-label="Email address"
+                  style={{letterSpacing: '-0.01em'}}
                 />
-                <SubmitButton />
+                <button 
+                  type="submit"
+                  className="h-10 px-4 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-900 transition-colors duration-200 whitespace-nowrap"
+                  disabled={false}
+                  style={{letterSpacing: '-0.01em'}}
+                >
+                  Join waitlist
+                </button>
               </form>
-              
+            
               {/* Form feedback message */}
               {showFormMessage && (
-                <div className={`mt-3 flex items-start gap-2 text-sm ${state.success ? 'text-green-400' : 'text-red-400'}`}>
+                <div className={`mt-3 flex items-start gap-2 text-sm ${state.success ? 'text-green-600' : 'text-red-600'}`}>
                   {state.success ? (
                     <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                   ) : (
@@ -324,13 +386,16 @@ export default function LandingPage() {
                 </div>
               )}
               
-              <div className="mt-4 space-y-3">
-                <p className="text-xs text-neutral-500">
+              <div className="mt-4 text-center">
+                <p className="text-xs text-gray-500">
                   {isLoadingCount ? (
-                    "Loading waitlist count..."
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="inline-block w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
+                      Loading waitlist count...
+                    </span>
                   ) : (
                     <>
-                      <span className="font-medium text-white">{waitlistCount}</span> users joined, <span className="font-medium text-white">{remainingSpots}</span> spots remaining
+                      <span className="font-medium text-black">{waitlistCount}</span> users joined, <span className="font-medium text-black">{remainingSpots}</span> spots remaining
                     </>
                   )}
                 </p>
@@ -340,7 +405,8 @@ export default function LandingPage() {
                   href="https://join.slack.com/t/planemail/shared_invite/zt-37xn9nvet-PmOvbhYaUwsrJUf6mP7uEw"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#4A154B] text-white rounded hover:bg-opacity-90 transition-colors mt-2"
+                  className="inline-flex items-center gap-2 px-4 py-2 mt-3 bg-gray-100 text-black text-sm rounded-full hover:bg-gray-200 transition-colors duration-200"
+                  style={{letterSpacing: '-0.01em'}}
                 >
                   <Slack className="h-4 w-4" />
                   <span>Join our Slack community</span>
@@ -348,28 +414,27 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
       </main>
 
-      <footer className="border-t border-neutral-200 py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+      <footer className="border-t border-gray-200 py-12 bg-white">
+        <div className="container mx-auto px-6 max-w-6xl">
+          <div className="flex flex-col md:flex-row justify-between items-start">
             <div className="mb-8 md:mb-0">
               <Logo />
-              <p className="text-sm text-neutral-500 mt-2">
+              <p className="text-sm text-gray-600 mt-2">
                 The open-source newsletter platform.
               </p>
             </div>
 
-            <div className="flex gap-8">
+            <div className="flex gap-16">
               <div>
-                <h3 className="text-sm font-medium mb-4">Product</h3>
+                <h3 className="text-sm font-semibold mb-3 text-black">Product</h3>
                 <ul className="space-y-2">
                   <li>
                     <Link
                       href="#features"
-                      className="text-sm text-neutral-500 hover:text-primary"
+                      className="text-sm text-gray-600 hover:text-black transition-colors duration-200"
                     >
                       Features
                     </Link>
@@ -377,7 +442,7 @@ export default function LandingPage() {
                   <li>
                     <Link
                       href="/docs"
-                      className="text-sm text-neutral-500 hover:text-primary"
+                      className="text-sm text-gray-600 hover:text-black transition-colors duration-200"
                     >
                       Documentation
                     </Link>
@@ -385,7 +450,7 @@ export default function LandingPage() {
                   <li>
                     <Link
                       href="/pricing"
-                      className="text-sm text-neutral-500 hover:text-primary"
+                      className="text-sm text-gray-600 hover:text-black transition-colors duration-200"
                     >
                       Pricing
                     </Link>
@@ -394,12 +459,12 @@ export default function LandingPage() {
               </div>
 
               <div>
-                <h3 className="text-sm font-medium mb-4">Community</h3>
+                <h3 className="text-sm font-semibold mb-3 text-black">Community</h3>
                 <ul className="space-y-2">
                   <li>
                     <Link
                       href="https://github.com/outrevo/PlaneMail"
-                      className="text-sm text-neutral-500 hover:text-primary flex items-center gap-1"
+                      className="text-sm text-gray-600 hover:text-black transition-colors duration-200 flex items-center gap-1"
                       target="_blank"
                     >
                       GitHub
@@ -409,7 +474,7 @@ export default function LandingPage() {
                   <li>
                     <Link
                       href="https://twitter.com/outrevo"
-                      className="text-sm text-neutral-500 hover:text-primary flex items-center gap-1"
+                      className="text-sm text-gray-600 hover:text-black transition-colors duration-200 flex items-center gap-1"
                       target="_blank"
                     >
                       Twitter
@@ -421,21 +486,21 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="border-t border-neutral-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-xs text-neutral-500">
-              &copy; {new Date().getFullYear()} PlaneMail. MIT License.
+          <div className="border-t border-gray-200 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-xs text-gray-500">
+              Copyright © {new Date().getFullYear()} PlaneMail. All rights reserved.
             </p>
 
-            <div className="flex gap-4 mt-4 md:mt-0">
+            <div className="flex gap-6 mt-4 md:mt-0">
               <Link
                 href="/privacy"
-                className="text-xs text-neutral-500 hover:text-primary"
+                className="text-xs text-gray-500 hover:text-black transition-colors duration-200"
               >
                 Privacy Policy
               </Link>
               <Link
                 href="/terms"
-                className="text-xs text-neutral-500 hover:text-primary"
+                className="text-xs text-gray-500 hover:text-black transition-colors duration-200"
               >
                 Terms of Service
               </Link>

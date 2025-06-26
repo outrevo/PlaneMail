@@ -306,3 +306,5 @@ export async function getSentNewsletters() {
     return [];
   }
 }
+
+export { getBrevoIntegrationDetails };

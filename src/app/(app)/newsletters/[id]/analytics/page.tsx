@@ -10,14 +10,14 @@ import { format } from 'date-fns';
 import NewsletterCharts from './charts'; // Import the new client component
 
 const StatCard = ({ title, value, icon: Icon, unit = '', description }: { title: string, value: string | number, icon: React.ElementType, unit?: string, description?: string }) => (
-  <Card className="shadow-sm">
+  <Card className="border border-gray-200 rounded-2xl shadow-sm">
     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-      <Icon className="h-5 w-5 text-muted-foreground" />
+      <CardTitle className="text-sm font-medium text-gray-600" style={{letterSpacing: '-0.01em'}}>{title}</CardTitle>
+      <Icon className="h-5 w-5 text-gray-400" />
     </CardHeader>
     <CardContent>
-      <div className="text-3xl font-bold">{value}{unit}</div>
-      {description && <p className="text-xs text-muted-foreground pt-1">{description}</p>}
+      <div className="text-3xl font-bold text-black" style={{letterSpacing: '-0.02em'}}>{value}{unit}</div>
+      {description && <p className="text-xs text-gray-600 pt-1">{description}</p>}
     </CardContent>
   </Card>
 );
@@ -30,11 +30,11 @@ export default async function NewsletterAnalyticsPage({ params }: { params: { id
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
         <AlertTriangle className="w-16 h-16 text-destructive mb-4" />
-        <h1 className="text-2xl font-bold">Newsletter Not Found</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold text-black" style={{letterSpacing: '-0.02em'}}>Newsletter Not Found</h1>
+        <p className="text-gray-600">
           The analytics for this newsletter could not be loaded, or you may not have permission to view it.
         </p>
-        <Button asChild variant="outline" className="mt-6">
+        <Button asChild className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200 mt-6" style={{letterSpacing: '-0.01em'}}>
           <Link href="/newsletters">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Newsletters
           </Link>
@@ -67,7 +67,7 @@ export default async function NewsletterAnalyticsPage({ params }: { params: { id
         title={`Analytics: ${newsletterData.subject}`}
         description={`Sent on ${formattedSentAt} via ${newsletterData.sendingProviderId || 'N/A'}`}
         actions={
-          <Button asChild variant="outline">
+          <Button asChild className="border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
             <Link href="/newsletters"><ArrowLeft className="mr-2 h-4 w-4" /> Back to Newsletters</Link>
           </Button>
         }
@@ -79,22 +79,22 @@ export default async function NewsletterAnalyticsPage({ params }: { params: { id
       
       <NewsletterCharts engagementData={engagementData} hasRecipientData={hasRecipientData} />
       
-      <Card className="shadow-sm">
+      <Card className="border border-gray-200 rounded-2xl shadow-sm">
         <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Clock className="h-5 w-5" />Key Timestamps</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-black font-semibold" style={{letterSpacing: '-0.01em'}}><Clock className="h-5 w-5" />Key Timestamps</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
-                <p className="text-muted-foreground">Sent At</p>
-                <p className="font-medium">{formattedSentAt}</p>
+                <p className="text-gray-600">Sent At</p>
+                <p className="font-medium text-black" style={{letterSpacing: '-0.01em'}}>{formattedSentAt}</p>
             </div>
             <div>
-                <p className="text-muted-foreground">First Opened</p>
-                <p className="font-medium">{formattedFirstOpenedAt}</p>
+                <p className="text-gray-600">First Opened</p>
+                <p className="font-medium text-black" style={{letterSpacing: '-0.01em'}}>{formattedFirstOpenedAt}</p>
             </div>
             <div>
-                <p className="text-muted-foreground">Last Opened</p>
-                <p className="font-medium">{formattedLastOpenedAt}</p>
+                <p className="text-gray-600">Last Opened</p>
+                <p className="font-medium text-black" style={{letterSpacing: '-0.01em'}}>{formattedLastOpenedAt}</p>
             </div>
         </CardContent>
       </Card>

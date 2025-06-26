@@ -16,35 +16,35 @@ export const metadata: Metadata = {
 };
 
 const CodeBlock = ({ children, className }: { children: React.ReactNode, className?: string }) => (
-  <pre className={`p-4 rounded-md bg-muted text-muted-foreground overflow-x-auto text-sm ${className}`}>
+  <pre className={`p-4 rounded-xl bg-gray-100 text-gray-800 overflow-x-auto text-sm font-mono border border-gray-200 ${className}`}>
     <code>{children}</code>
   </pre>
 );
 
 export default function ApiDocumentationPage() {
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <div className="container mx-auto py-8 px-6 space-y-8 max-w-5xl">
       <PageHeader
         title="PlaneMail API Documentation"
         description="Integrate PlaneMail programmatically using our API."
       />
 
-      <Card className="shadow-lg">
+      <Card className="border border-gray-200 rounded-2xl shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <KeyRound className="h-5 w-5" /> Authentication
+          <CardTitle className="flex items-center gap-2 text-xl font-semibold text-black" style={{letterSpacing: '-0.01em'}}>
+            <KeyRound className="h-5 w-5 text-gray-600" /> Authentication
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p>
-            All API requests must be authenticated using an API key. Pass your API key as a Bearer token in the <code className="bg-muted px-1 py-0.5 rounded-sm text-xs">Authorization</code> header.
+        <CardContent className="space-y-4 text-sm">
+          <p className="text-gray-700" style={{letterSpacing: '-0.01em'}}>
+            All API requests must be authenticated using an API key. Pass your API key as a Bearer token in the <code className="bg-gray-100 px-2 py-1 rounded-md text-xs font-medium">Authorization</code> header.
           </p>
           <CodeBlock>
             Authorization: Bearer YOUR_API_KEY
           </CodeBlock>
-          <p>
+          <p className="text-gray-700" style={{letterSpacing: '-0.01em'}}>
             You can generate and manage your API keys from the{' '}
-            <Button variant="link" asChild className="p-0 h-auto text-sm">
+            <Button variant="link" asChild className="p-0 h-auto text-sm text-black font-medium hover:text-gray-700 transition-colors duration-200">
               <Link href="/integrations">Integrations page (requires login) <ArrowRight className="ml-1 h-3 w-3" /></Link>
             </Button>.
             Keep your API keys secure and do not share them publicly.

@@ -108,7 +108,7 @@ export async function saveBrevoApiKey(apiKey: string) {
 
   const validation = brevoApiKeySchema.safeParse(apiKey);
   if (!validation.success) {
-    return { success: false, message: validation.error.flatten().fieldErrors._errors.join(', ') || 'Invalid API key format.' };
+    return { success: false, message: validation.error.flatten().formErrors.join(', ') || 'Invalid API key format.' };
   }
 
   const validatedApiKey = validation.data;
@@ -244,9 +244,9 @@ export async function saveMailgunCredentials(apiKey: string, domain: string, reg
 
   if (!apiKeyValidation.success || !domainValidation.success || !regionValidation.success) {
     let errors = {};
-    if (!apiKeyValidation.success) errors = {...errors, apiKey: apiKeyValidation.error.flatten().fieldErrors._errors};
-    if (!domainValidation.success) errors = {...errors, domain: domainValidation.error.flatten().fieldErrors._errors};
-    if (!regionValidation.success) errors = {...errors, region: regionValidation.error.flatten().fieldErrors._errors};
+    if (!apiKeyValidation.success) errors = {...errors, apiKey: apiKeyValidation.error.flatten().formErrors};
+    if (!domainValidation.success) errors = {...errors, domain: domainValidation.error.flatten().formErrors};
+    if (!regionValidation.success) errors = {...errors, region: regionValidation.error.flatten().formErrors};
     return { success: false, message: 'Invalid input.', errors };
   }
   
@@ -377,9 +377,9 @@ export async function saveAmazonSESCredentials(accessKeyId: string, secretAccess
   const regionValidation = awsRegionSchema.safeParse(region);
 
   let errors: any = {};
-  if (!accessKeyIdValidation.success) errors.accessKeyId = accessKeyIdValidation.error.flatten().fieldErrors._errors;
-  if (!secretAccessKeyValidation.success) errors.secretAccessKey = secretAccessKeyValidation.error.flatten().fieldErrors._errors;
-  if (!regionValidation.success) errors.region = regionValidation.error.flatten().fieldErrors._errors;
+  if (!accessKeyIdValidation.success) errors.accessKeyId = accessKeyIdValidation.error.flatten().formErrors;
+  if (!secretAccessKeyValidation.success) errors.secretAccessKey = secretAccessKeyValidation.error.flatten().formErrors;
+  if (!regionValidation.success) errors.region = regionValidation.error.flatten().formErrors;
 
   if (Object.keys(errors).length > 0) {
     return { success: false, message: 'Invalid input.', errors };
@@ -574,7 +574,7 @@ export async function addSubscriberFromApi(
   
   const { email, name, status, segmentNames } = data;
 
-  const existingSubscriber = await db.query.subscribersTable.findFirst({
+  const existingSubscriber = await db.query.subscribers.findFirst({
     where: and(eq(subscribersTable.userId, apiUserId), eq(subscribersTable.email, email)),
   });
 
