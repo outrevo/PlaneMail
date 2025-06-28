@@ -9,7 +9,6 @@ import { useToast } from '@/hooks/use-toast';
 import {
   LayoutDashboard,
   FileText,
-  Mail,
   Users,
   Settings,
   Plug, 
@@ -36,8 +35,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/templates', label: 'Templates', icon: FileText },
-  { href: '/newsletters', label: 'Newsletters', icon: Mail },
+  { href: '/posts', label: 'Posts', icon: FileText },
   { href: '/subscribers', label: 'Subscribers', icon: Users },
   { href: '/integrations', label: 'Integrations', icon: Plug },
   { href: '/billing', label: 'Billing', icon: CreditCard },

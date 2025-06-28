@@ -3,7 +3,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { getBrevoIntegrationDetails, getNewsletterPageData } from '@/app/(app)/newsletters/actions';
+import { getBrevoIntegrationDetails } from '@/app/(app)/integrations/actions';
+import { getPostPageData } from '@/app/(app)/posts/actions';
 
 export async function GET() {
   try {
@@ -16,8 +17,8 @@ export async function GET() {
     // Test direct integration fetch
     const brevoDetails = await getBrevoIntegrationDetails();
     
-    // Test newsletter page data fetch
-    const newsletterData = await getNewsletterPageData();
+    // Test post page data fetch
+    const postData = await getPostPageData();
 
     return NextResponse.json({
       success: true,
@@ -25,10 +26,9 @@ export async function GET() {
         userId: userId,
         timestamp: new Date().toISOString(),
         directBrevoFetch: brevoDetails,
-        newsletterPageData: {
-          brevoIntegration: newsletterData.brevoIntegration,
-          templatesCount: newsletterData.templates.length,
-          segmentsCount: newsletterData.segments.length,
+        postPageData: {
+          brevoIntegration: postData.brevoIntegration,
+          segmentsCount: postData.segments.length,
         }
       }
     });

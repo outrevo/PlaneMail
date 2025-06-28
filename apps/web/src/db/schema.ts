@@ -45,16 +45,51 @@ export const apiKeys = pgTable('api_keys', {
   expiresAt: timestamp('expires_at'),
 });
 
-
-export const templates = pgTable('templates', {
+export const posts = pgTable('posts', {
   id: uuid('id').defaultRandom().primaryKey(),
-  userId: varchar('user_id', { length: 255 }).notNull(), 
-  name: varchar('name', { length: 255 }).notNull(),
-  content: text('content'), 
-  previewImageUrl: text('preview_image_url'),
-  category: varchar('category', { length: 100 }),
+  userId: varchar('user_id', { length: 255 }).notNull(),
+  
+  // Basic post information
+  title: varchar('title', { length: 255 }).notNull(),
+  content: text('content'), // Rich content/HTML
+  excerpt: text('excerpt'), // Short description for previews
+  slug: varchar('slug', { length: 255 }).notNull(), // URL-friendly identifier for web publishing
+  
+  // Publication settings
+  status: varchar('status', { length: 50 }).default('draft').notNull(), // draft, published, scheduled, sent
+  publishedAt: timestamp('published_at'),
+  
+  // Email publishing settings
+  emailSubject: varchar('email_subject', { length: 255 }), // Subject line when sent as email
+  fromName: varchar('from_name', { length: 255 }),
+  fromEmail: varchar('from_email', { length: 255 }),
+  sentAt: timestamp('sent_at'),
+  recipientCount: integer('recipient_count').default(0),
+  sendingProviderId: varchar('sending_provider_id', { length: 50 }),
+  providerMessageId: text('provider_message_id'),
+  
+  // Web publishing settings  
+  webEnabled: boolean('web_enabled').default(false), // Whether to publish as web page
+  webPublishedAt: timestamp('web_published_at'),
+  seoTitle: varchar('seo_title', { length: 255 }), // SEO title for web page
+  seoDescription: text('seo_description'), // SEO description for web page
+  
+  // Analytics
+  totalOpens: integer('total_opens').default(0).notNull(),
+  uniqueOpens: integer('unique_opens').default(0).notNull(),
+  totalClicks: integer('total_clicks').default(0).notNull(),
+  uniqueClicks: integer('unique_clicks').default(0).notNull(),
+  totalBounces: integer('total_bounces').default(0).notNull(),
+  webViews: integer('web_views').default(0).notNull(),
+  firstOpenedAt: timestamp('first_opened_at'),
+  lastOpenedAt: timestamp('last_opened_at'),
+  
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+}, (table) => {
+  return {
+    userSlugUnique: uniqueIndex('user_slug_idx').on(table.userId, table.slug),
+  };
 });
 
 export const subscribers = pgTable('subscribers', {
@@ -91,30 +126,15 @@ export const subscriberSegments = pgTable('subscriber_segments', {
   };
 });
 
-export const newsletters = pgTable('newsletters', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  userId: varchar('user_id', { length: 255 }).notNull(), 
-  subject: varchar('subject', { length: 255 }).notNull(),
-  fromName: varchar('from_name', { length: 255 }),
-  fromEmail: varchar('from_email', { length: 255 }),
-  content: text('content'), 
-  templateId: uuid('template_id').references(() => templates.id, { onDelete: 'set null' }), 
-  status: varchar('status', { length: 50 }).default('draft').notNull(), 
-  sentAt: timestamp('sent_at'),
-  recipientCount: integer('recipient_count').default(0),
-  sendingProviderId: varchar('sending_provider_id', { length: 50 }), 
-  providerMessageId: text('provider_message_id'), 
-  
-  totalOpens: integer('total_opens').default(0).notNull(),
-  uniqueOpens: integer('unique_opens').default(0).notNull(),
-  totalClicks: integer('total_clicks').default(0).notNull(),
-  uniqueClicks: integer('unique_clicks').default(0).notNull(),
-  totalBounces: integer('total_bounces').default(0).notNull(),
-  firstOpenedAt: timestamp('first_opened_at'),
-  lastOpenedAt: timestamp('last_opened_at'),
-
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+// Post-Segment relationship for audience targeting
+export const postSegments = pgTable('post_segments', {
+  postId: uuid('post_id').notNull().references(() => posts.id, { onDelete: 'cascade' }),
+  segmentId: uuid('segment_id').notNull().references(() => segments.id, { onDelete: 'cascade' }),
+  assignedAt: timestamp('assigned_at').defaultNow().notNull(),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.postId, table.segmentId] }),
+  };
 });
 
 export const userSubscriptions = pgTable('user_subscriptions', {
@@ -143,6 +163,7 @@ export const appUsersRelations = relations(appUsers, ({ one, many }) => ({
     fields: [appUsers.clerkUserId],
     references: [userSubscriptions.userId],
   }),
+  posts: many(posts),
 }));
 
 export const userIntegrationsRelations = relations(userIntegrations, ({ one }) => ({
@@ -159,8 +180,12 @@ export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
   }),
 }));
 
-export const templatesRelations = relations(templates, ({ one, many }) => ({
-  newsletters: many(newsletters),
+export const postsRelations = relations(posts, ({ one, many }) => ({
+  user: one(appUsers, {
+    fields: [posts.userId],
+    references: [appUsers.clerkUserId],
+  }),
+  postSegments: many(postSegments),
 }));
 
 export const subscribersRelations = relations(subscribers, ({ many }) => ({
@@ -169,6 +194,7 @@ export const subscribersRelations = relations(subscribers, ({ many }) => ({
 
 export const segmentsRelations = relations(segments, ({ many }) => ({
   subscriberSegments: many(subscriberSegments),
+  postSegments: many(postSegments),
 }));
 
 export const subscriberSegmentsRelations = relations(subscriberSegments, ({ one }) => ({
@@ -182,10 +208,14 @@ export const subscriberSegmentsRelations = relations(subscriberSegments, ({ one 
   }),
 }));
 
-export const newslettersRelations = relations(newsletters, ({ one }) => ({
-  template: one(templates, {
-    fields: [newsletters.templateId],
-    references: [templates.id],
+export const postSegmentsRelations = relations(postSegments, ({ one }) => ({
+  post: one(posts, {
+    fields: [postSegments.postId],
+    references: [posts.id],
+  }),
+  segment: one(segments, {
+    fields: [postSegments.segmentId],
+    references: [segments.id],
   }),
 }));
 

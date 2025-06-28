@@ -10,7 +10,7 @@ export default async function DashboardPage() {
 
   const dashboardCards = [
     { title: 'Total Subscribers', value: statsData.totalSubscribers.toLocaleString(), icon: Users, trend: '+12% this month' },
-    { title: 'Newsletters Sent', value: statsData.newslettersSent.toLocaleString(), icon: Mail, trend: '+5 last week' },
+    { title: 'Posts Sent', value: statsData.postsSent.toLocaleString(), icon: Mail, trend: '+5 last week' },
     { title: 'Avg. Open Rate', value: 'N/A', icon: BarChart, trend: 'Tracking coming soon' },
     { title: 'Avg. Click Rate', value: 'N/A', icon: LineChart, trend: 'Tracking coming soon' },
   ];
@@ -26,9 +26,9 @@ export default async function DashboardPage() {
           </p>
         </div>
         <Button asChild className="bg-black hover:bg-gray-900 text-white text-sm font-medium rounded-full transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
-          <Link href="/newsletters/create">
+          <Link href="/posts">
             <Plus className="mr-2 h-4 w-4" />
-            Create Newsletter
+            Create Post
           </Link>
         </Button>
       </div>
@@ -92,8 +92,8 @@ export default async function DashboardPage() {
           <div className="p-6">
             <div className="grid grid-cols-1 gap-3">
               <Button asChild variant="outline" className="justify-start border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
-                <Link href="/templates/editor/new">
-                  Create Template
+                <Link href="/posts">
+                  Create Post
                   <ArrowRight className="ml-auto h-4 w-4" />
                 </Link>
               </Button>
@@ -104,13 +104,16 @@ export default async function DashboardPage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="justify-start border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
-                <Link href="/newsletters">
-                  View Newsletters
+                <Link href="/posts">
+                  View Posts
                   <ArrowRight className="ml-auto h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="outline" className="justify-start border-gray-200 text-gray-400 cursor-not-allowed rounded-lg" disabled style={{letterSpacing: '-0.01em'}}>
-                Analytics (Coming Soon)
+              <Button asChild variant="outline" className="justify-start border-gray-200 hover:bg-gray-50 text-black font-medium rounded-lg transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
+                <Link href="/integrations">
+                  Setup Integrations
+                  <ArrowRight className="ml-auto h-4 w-4" />
+                </Link>
               </Button>
             </div>
           </div>

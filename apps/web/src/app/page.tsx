@@ -488,18 +488,18 @@ export default function LandingPage() {
 
           <div className="border-t border-gray-200 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
             <p className="text-xs text-gray-500">
-              Copyright © {new Date().getFullYear()} PlaneMail. All rights reserved.
+              Copyright © {new Date().getFullYear()} Devsquirrel Technologies Private Limited. All rights reserved.
             </p>
 
             <div className="flex gap-6 mt-4 md:mt-0">
               <Link
-                href="/privacy"
+                href="/privacy-policy"
                 className="text-xs text-gray-500 hover:text-black transition-colors duration-200"
               >
                 Privacy Policy
               </Link>
               <Link
-                href="/terms"
+                href="/terms-of-service"
                 className="text-xs text-gray-500 hover:text-black transition-colors duration-200"
               >
                 Terms of Service

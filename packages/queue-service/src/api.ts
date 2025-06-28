@@ -5,7 +5,7 @@ import { emailQueueManager } from './queue-manager';
 import { EmailJobData, EmailJobResponse } from '@planemail/shared';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.QUEUE_PORT || 3002;
 
 // Middleware
 app.use(cors());

@@ -26,7 +26,7 @@ export function PricingButton({ plan }: PricingButtonProps) {
   const handleCheckout = async () => {
     if (plan.priceId === 'enterprise') {
       // Handle enterprise contact
-      window.location.href = 'mailto:hello@planemail.com';
+      window.location.href = 'mailto:hello@planemail.in';
       return;
     }
 

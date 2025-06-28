@@ -1,0 +1,269 @@
+/* Novel Editor Styles */
+.ProseMirror {
+  outline: none;
+  position: relative;
+}
+
+.ProseMirror .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: rgb(156, 163, 175);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Block level hover states and indicators */
+.ProseMirror > * {
+  position: relative;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  margin: 4px 0;
+  padding: 2px 0;
+}
+
+.ProseMirror > *:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  padding-left: 8px;
+  margin-left: -8px;
+  border-left: 3px solid #e5e7eb;
+}
+
+.dark .ProseMirror > *:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+  border-left-color: #374151;
+}
+
+/* Paragraph specific styles */
+.ProseMirror p {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.ProseMirror p.is-empty::before {
+  content: "Type '/' for commands or start writing...";
+  color: #9ca3af;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Heading styles */
+.ProseMirror h1 {
+  font-size: 2.25rem;
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 24px 0 16px 0;
+}
+
+.ProseMirror h2 {
+  font-size: 1.875rem;
+  font-weight: bold;
+  line-height: 1.3;
+  margin: 20px 0 12px 0;
+}
+
+.ProseMirror h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1.4;
+  margin: 16px 0 8px 0;
+}
+
+/* List styles */
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 24px;
+  margin: 12px 0;
+}
+
+.ProseMirror li {
+  margin: 4px 0;
+  line-height: 1.6;
+}
+
+/* Slash command menu styles */
+.slash-command-menu {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.dark .slash-command-menu {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+.slash-command-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  text-align: left;
+  transition: background-color 0.15s ease;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.slash-command-item:hover,
+.slash-command-item.selected {
+  background-color: #f3f4f6;
+}
+
+.dark .slash-command-item:hover,
+.dark .slash-command-item.selected {
+  background-color: #374151;
+}
+
+.slash-command-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  margin-right: 12px;
+  background-color: #ffffff;
+}
+
+.dark .slash-command-icon {
+  border-color: #4b5563;
+  background-color: #111827;
+}
+
+/* Task list custom styles */
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  margin: 4px 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li input[type="checkbox"] {
+  margin-right: 8px;
+  margin-top: 4px;
+  cursor: pointer;
+}
+
+/* Image styles */
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 16px 0;
+  display: block;
+}
+
+/* Code block styles */
+.ProseMirror pre {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'Monaco', 'Consolas', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.dark .ProseMirror pre {
+  background-color: #1e1e1e;
+  border-color: #333;
+  color: #d4d4d4;
+}
+
+/* Inline code styles */
+.ProseMirror code {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-family: 'Monaco', 'Consolas', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+}
+
+.dark .ProseMirror code {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+/* Blockquote styles */
+.ProseMirror blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 16px;
+  margin: 16px 0;
+  font-style: italic;
+  color: #6b7280;
+}
+
+.dark .ProseMirror blockquote {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
+/* Horizontal rule styles */
+.ProseMirror hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 24px 0;
+  border-radius: 1px;
+}
+
+.dark .ProseMirror hr {
+  border-top-color: #374151;
+}
+
+/* Selection styles */
+.ProseMirror ::selection {
+  background-color: #dbeafe;
+}
+
+.dark .ProseMirror ::selection {
+  background-color: #1e40af;
+}
+
+/* Focus styles */
+.ProseMirror:focus-within {
+  outline: none;
+}
+
+/* Drag and drop feedback */
+.ProseMirror.drag-over {
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 2px dashed #3b82f6;
+  border-radius: 8px;
+}
+
+/* Link styles */
+.ProseMirror a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
+}
+
+.ProseMirror a:hover {
+  color: #1d4ed8;
+}
+
+.dark .ProseMirror a {
+  color: #60a5fa;
+}
+
+.dark .ProseMirror a:hover {
+  color: #93c5fd;
+}
