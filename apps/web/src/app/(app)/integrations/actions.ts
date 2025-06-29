@@ -1,4 +1,3 @@
-
 'use server';
 
 import { db } from '@/lib/drizzle';
@@ -13,6 +12,7 @@ import formData from 'form-data'; // mailgun.js requires this
 import { SESv2Client, GetAccountCommand, ListEmailIdentitiesCommand } from "@aws-sdk/client-sesv2"; // AWS SES SDK
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import { triggerSubscriberCreated, triggerSegmentCreated } from '@/lib/webhooks/dispatcher';
 
 const BREVO_PROVIDER_ID = 'brevo';
 const MAILGUN_PROVIDER_ID = 'mailgun';
@@ -601,12 +601,23 @@ export async function addSubscriberFromApi(
       name: name || null,
       status,
       dateAdded: new Date(),
-    }).returning({ id: subscribersTable.id });
+    }).returning({ 
+      id: subscribersTable.id,
+      email: subscribersTable.email,
+      name: subscribersTable.name,
+      status: subscribersTable.status,
+      dateAdded: subscribersTable.dateAdded
+    });
 
     if (segmentIds.length > 0 && newSubscriber) {
       const segmentLinks = segmentIds.map(segmentId => ({ subscriberId: newSubscriber.id, segmentId }));
       await db.insert(subscriberSegments).values(segmentLinks).onConflictDoNothing();
     }
+    
+    // Trigger webhook for new subscriber
+    triggerSubscriberCreated(apiUserId, newSubscriber).catch(err => 
+      console.error('Failed to trigger subscriber.created webhook:', err)
+    );
     
     return { success: true, message: 'Subscriber added successfully.', subscriberId: newSubscriber.id, statusCode: 201 };
   } catch (dbError: any) {

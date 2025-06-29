@@ -9,7 +9,7 @@ export default async function DashboardPage() {
 
   const dashboardCards = [
     { title: 'Total Subscribers', value: statsData.totalSubscribers.toLocaleString(), icon: Users, trend: '+12% this month' },
-    { title: 'Newsletters Sent', value: statsData.newslettersSent.toLocaleString(), icon: Mail, trend: '+5 last week' },
+    { title: 'Posts Sent', value: statsData.postsSent.toLocaleString(), icon: Mail, trend: '+5 last week' },
     { title: 'Avg. Open Rate', value: 'N/A', icon: BarChart, trend: 'Tracking coming soon' },
     { title: 'Avg. Click Rate', value: 'N/A', icon: LineChart, trend: 'Tracking coming soon' },
   ];

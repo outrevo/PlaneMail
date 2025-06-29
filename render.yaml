@@ -1,0 +1,94 @@
+services:
+  # Main Next.js Web Application
+  - type: web
+    name: planemail-web
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: cd apps/web && npm install && npm run build
+    startCommand: cd apps/web && npm start
+    branch: main
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_APP_URL
+        fromService:
+          type: web
+          name: planemail-web
+          property: host
+      - key: NEXT_PUBLIC_APP_DOMAIN
+        fromService:
+          type: web
+          name: planemail-web
+          property: host
+      - key: DATABASE_URL
+        fromDatabase:
+          name: planemail-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: planemail-redis
+          property: connectionString
+      # Add your secrets in Render dashboard:
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false
+      - key: PADDLE_API_KEY
+        sync: false
+      - key: PADDLE_WEBHOOK_SECRET
+        sync: false
+      - key: NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
+        sync: false
+      - key: NEXT_PUBLIC_PADDLE_HOSTED_PRICE_ID
+        sync: false
+      - key: NEXT_PUBLIC_PADDLE_PRO_PRICE_ID
+        sync: false
+      - key: NEXT_PUBLIC_PADDLE_ENTERPRISE_PRICE_ID
+        sync: false
+      - key: PADDLE_HOSTED_PRICE_ID
+        sync: false
+      - key: PADDLE_PRO_PRICE_ID
+        sync: false
+      - key: PADDLE_ENTERPRISE_PRICE_ID
+        sync: false
+      - key: PADDLE_API_ENV
+        value: sandbox
+
+  # Background Queue Service (Optional)
+  - type: web
+    name: planemail-queue
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: cd packages/queue-service && npm install && npm run build
+    startCommand: cd packages/queue-service && npm run start
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: planemail-redis
+          property: connectionString
+      - key: LOG_LEVEL
+        value: info
+
+databases:
+  # PostgreSQL Database
+  - name: planemail-db
+    databaseName: planemail
+    user: planemail
+    plan: starter
+    region: oregon
+
+  # Redis for Queues
+  - name: planemail-redis
+    plan: starter
+    region: oregon

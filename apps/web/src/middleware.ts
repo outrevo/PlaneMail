@@ -1,5 +1,6 @@
 
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { customDomainMiddleware, shouldHandleCustomDomain } from "@/lib/middleware/custom-domains";
 
 // Routes that should be accessible to everyone, logged in or not.
 const isPublicRoute = createRouteMatcher([
@@ -22,14 +23,27 @@ const isPublicRoute = createRouteMatcher([
   '/images/(.*)', // All images
   '/fonts/(.*)', // All font files
   '/static/(.*)', // All static assets
+  '/p/(.*)', // Public post pages
+  '/archive', // Public archive page
+  '/api/public/(.*)', // Public API routes
   // Add any other public API routes or webhooks here
   // e.g., '/api/webhooks/(.*)'
 ]);
 
-
 export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) await auth.protect()
-})
+  // Handle custom domains first
+  if (shouldHandleCustomDomain(req)) {
+    return await customDomainMiddleware(req);
+  }
+
+  // For custom domains, all public routes should be accessible
+  if (req.headers.get('x-custom-domain') && isPublicRoute(req)) {
+    return;
+  }
+
+  // Standard Clerk authentication for main domain
+  if (!isPublicRoute(req)) await auth.protect();
+});
 
 export const config = {
   matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],

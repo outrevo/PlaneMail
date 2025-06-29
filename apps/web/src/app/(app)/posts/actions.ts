@@ -22,7 +22,10 @@ const postSchema = z.object({
   title: z.string().min(1, { message: 'Title is required.' }).max(255),
   content: z.string().optional(),
   excerpt: z.string().optional(),
-  slug: z.string().min(1, { message: 'Slug is required.' }).max(255).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { 
+  slug: z.string().optional().refine((slug) => {
+    if (!slug) return true; // Allow empty slug for drafts
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+  }, { 
     message: 'Slug must be lowercase letters, numbers, and hyphens only' 
   }),
   
@@ -136,27 +139,40 @@ export async function createPost(formDataObj: FormData) {
   try {
     const { segmentIds: validatedSegmentIds, ...postData } = validatedFields.data;
     
-    // Check for slug uniqueness
-    const existingPost = await db.select({ id: posts.id })
-      .from(posts)
-      .where(and(
-        eq(posts.userId, userId),
-        eq(posts.slug, postData.slug)
-      ))
-      .limit(1);
+    // Auto-generate slug if not provided for drafts
+    if (!postData.slug && postData.title) {
+      postData.slug = postData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+    }
 
-    if (existingPost.length > 0) {
-      return { 
-        success: false, 
-        message: 'A post with this slug already exists', 
-        errors: { slug: ['Slug must be unique'] }
-      };
+    // Check for slug uniqueness if slug is provided
+    if (postData.slug) {
+      const existingPost = await db.select({ id: posts.id })
+        .from(posts)
+        .where(and(
+          eq(posts.userId, userId),
+          eq(posts.slug, postData.slug)
+        ))
+        .limit(1);
+
+      if (existingPost.length > 0) {
+        return { 
+          success: false, 
+          message: 'A post with this slug already exists', 
+          errors: { slug: ['Slug must be unique'] }
+        };
+      }
     }
 
     // Create the post
     const [newPost] = await db.insert(posts).values({
       ...postData,
       userId,
+      slug: postData.slug || '', // Ensure slug is never undefined
     }).returning();
 
     // Add segment associations if any
@@ -221,7 +237,7 @@ export async function updatePost(postId: string, formDataObj: FormData) {
     const { segmentIds: validatedSegmentIds, ...postData } = validatedFields.data;
     
     // Check if post exists and belongs to user
-    const existingPost = await db.select({ id: posts.id })
+    const existingPost = await db.select({ id: posts.id, slug: posts.slug })
       .from(posts)
       .where(and(
         eq(posts.id, postId),
@@ -237,29 +253,40 @@ export async function updatePost(postId: string, formDataObj: FormData) {
       };
     }
 
-    // Check for slug uniqueness (excluding current post)
-    const conflictingPost = await db.select({ id: posts.id })
-      .from(posts)
-      .where(and(
-        eq(posts.userId, userId),
-        eq(posts.slug, postData.slug),
-        // Exclude current post
-        eq(posts.id, postId)
-      ))
-      .limit(1);
+    // Auto-generate slug if not provided for drafts
+    if (!postData.slug && postData.title) {
+      postData.slug = postData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+    }
 
-    if (conflictingPost.length > 0) {
-      return { 
-        success: false, 
-        message: 'A post with this slug already exists', 
-        errors: { slug: ['Slug must be unique'] }
-      };
+    // Check for slug uniqueness if slug changed
+    if (postData.slug && postData.slug !== existingPost[0].slug) {
+      const conflictingPost = await db.select({ id: posts.id })
+        .from(posts)
+        .where(and(
+          eq(posts.userId, userId),
+          eq(posts.slug, postData.slug)
+        ))
+        .limit(1);
+
+      if (conflictingPost.length > 0) {
+        return { 
+          success: false, 
+          message: 'A post with this slug already exists', 
+          errors: { slug: ['Slug must be unique'] }
+        };
+      }
     }
 
     // Update the post
     await db.update(posts)
       .set({
         ...postData,
+        slug: postData.slug || existingPost[0].slug, // Keep existing slug if not provided
         updatedAt: new Date(),
       })
       .where(and(
@@ -615,5 +642,120 @@ export async function deletePost(postId: string) {
       success: false, 
       message: 'Failed to delete post. Please try again.'
     };
+  }
+}
+
+// Auto-save draft function for seamless editing
+export async function autoSaveDraft(postId: string | null, formDataObj: FormData) {
+  const { userId } = await auth();
+  if (!userId) return { success: false, message: 'Not authenticated', postId: null };
+
+  try {
+    // Minimal validation for auto-save
+    const title = formDataObj.get('title') as string;
+    const content = formDataObj.get('content') as string;
+    
+    if (!title?.trim()) {
+      return { success: false, message: 'Title is required', postId: null };
+    }
+
+    if (postId) {
+      // Update existing draft
+      await db.update(posts)
+        .set({
+          title,
+          content: content || '',
+          excerpt: formDataObj.get('excerpt') as string || '',
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(posts.id, postId),
+          eq(posts.userId, userId)
+        ));
+      
+      return { success: true, message: 'Draft saved', postId };
+    } else {
+      // Create new draft
+      const slug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+
+      const [newPost] = await db.insert(posts).values({
+        title,
+        slug: slug || `draft-${Date.now()}`,
+        content: content || '',
+        excerpt: formDataObj.get('excerpt') as string || '',
+        status: 'draft',
+        userId,
+      }).returning();
+
+      return { success: true, message: 'Draft created', postId: newPost.id };
+    }
+  } catch (error) {
+    console.error('Auto-save failed:', error);
+    return { success: false, message: 'Auto-save failed', postId: null };
+  }
+}
+
+// Get available email providers for the current user
+export async function getAvailableEmailProviders(): Promise<{
+  providers: Array<{
+    id: 'brevo' | 'mailgun' | 'amazon_ses';
+    name: string;
+    connected: boolean;
+    status: string;
+    senders?: Array<{ email: string; name?: string }>;
+    domain?: string;
+    verifiedIdentities?: string[];
+  }>;
+}> {
+  const { userId } = await auth();
+  if (!userId) {
+    return { providers: [] };
+  }
+
+  try {
+    const [brevoDetails, mailgunDetails, amazonSESDetails] = await Promise.all([
+      getBrevoIntegrationDetails(),
+      getMailgunIntegrationDetails(),
+      getAmazonSESIntegrationDetails()
+    ]);
+
+    const providers = [
+      {
+        id: 'brevo' as const,
+        name: 'Brevo',
+        connected: brevoDetails.connected,
+        status: brevoDetails.status || 'inactive',
+        senders: brevoDetails.senders?.map(sender => ({
+          email: sender.email,
+          name: sender.name
+        })) || [],
+      },
+      {
+        id: 'mailgun' as const,
+        name: 'Mailgun',
+        connected: mailgunDetails.connected,
+        status: mailgunDetails.status || 'inactive',
+        domain: mailgunDetails.domain || undefined,
+        senders: mailgunDetails.domain ? [{ email: `noreply@${mailgunDetails.domain}` }] : [],
+      },
+      {
+        id: 'amazon_ses' as const,
+        name: 'Amazon SES',
+        connected: amazonSESDetails.connected,
+        status: amazonSESDetails.status || 'inactive',
+        verifiedIdentities: amazonSESDetails.verifiedIdentities || [],
+        senders: amazonSESDetails.verifiedIdentities?.map(email => ({ email })) || [],
+      },
+    ].filter(provider => provider.connected);
+
+    return { providers };
+  } catch (error) {
+    console.error('Failed to get email providers:', error);
+    return { providers: [] };
   }
 }

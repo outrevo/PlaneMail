@@ -9,8 +9,8 @@ COPY package*.json ./
 COPY packages/shared/package*.json ./packages/shared/
 COPY packages/queue-service/package*.json ./packages/queue-service/
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies (including dev deps for build)
+RUN npm ci
 
 # Copy source code
 COPY packages/shared/ ./packages/shared/

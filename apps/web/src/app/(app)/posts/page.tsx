@@ -42,12 +42,15 @@ import {
   sendPostAsEmail,
   publishPostToWeb,
   deletePost,
+  autoSaveDraft,
+  getAvailableEmailProviders,
   type PostPageDataType,
   type PostWithSegments 
 } from './actions';
 import Link from 'next/link';
 import { NovelEditor } from '@/components/novel/editor';
 import { FullScreenPostEditor } from '@/components/novel/full-screen-editor';
+import { useDebouncedCallback } from 'use-debounce';
 
 // Multi-step workflow steps
 const WORKFLOW_STEPS = [
@@ -99,6 +102,10 @@ export default function PostsPage() {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [showCreateFlow, setShowCreateFlow] = useState(false);
 
+  // Auto-save state
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [availableProviders, setAvailableProviders] = useState<any[]>([]);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 12;
@@ -107,12 +114,14 @@ export default function PostsPage() {
     setIsLoading(true);
     startTransition(async () => {
       try {
-        const [pageDataResult, postsResult] = await Promise.all([
+        const [pageDataResult, postsResult, providersResult] = await Promise.all([
           getPostPageData(),
-          getUserPosts()
+          getUserPosts(),
+          getAvailableEmailProviders()
         ]);
         setPageData(pageDataResult);
         setUserPosts(postsResult);
+        setAvailableProviders(providersResult.providers);
       } catch (error) {
         console.error('Failed to fetch data:', error);
         toast({
@@ -396,6 +405,39 @@ export default function PostsPage() {
     setShowCreateFlow(true);
   };
 
+  // Auto-save functionality with debouncing
+  const debouncedAutoSave = useDebouncedCallback(async () => {
+    if (!workflowData.title?.trim()) return;
+    
+    setAutoSaveStatus('saving');
+    try {
+      const formData = new FormData();
+      formData.append('title', workflowData.title);
+      formData.append('content', workflowData.content || '');
+      formData.append('excerpt', workflowData.excerpt || '');
+      
+      const result = await autoSaveDraft(editingPostId, formData);
+      
+      if (result.success && result.postId && !editingPostId) {
+        setEditingPostId(result.postId);
+      }
+      
+      setAutoSaveStatus('saved');
+      setTimeout(() => setAutoSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+      setAutoSaveStatus('error');
+      setTimeout(() => setAutoSaveStatus('idle'), 3000);
+    }
+  }, 2000);
+
+  // Trigger auto-save when content changes
+  useEffect(() => {
+    if (showCreateFlow && (workflowData.title || workflowData.content)) {
+      debouncedAutoSave();
+    }
+  }, [workflowData.title, workflowData.content, showCreateFlow, debouncedAutoSave]);
+
   // Pagination logic
   const publishedPosts = userPosts.filter(post => 
     post.status === 'published' || post.status === 'sent' || post.webEnabled
@@ -423,10 +465,18 @@ export default function PostsPage() {
           title="Posts" 
           description="Create posts that can be sent as newsletters and published as web pages"
         />
-        <Button onClick={() => { resetWorkflow(); setShowCreateFlow(true); }}>
-          <PlusCircle className="h-4 w-4 mr-2" />
-          New Post
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/settings/site">
+              <Globe className="h-4 w-4 mr-2" />
+              Site Settings
+            </Link>
+          </Button>
+          <Button onClick={() => { resetWorkflow(); setShowCreateFlow(true); }}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            New Post
+          </Button>
+        </div>
       </div>
 
       {showCreateFlow ? (
@@ -440,6 +490,8 @@ export default function PostsPage() {
           onClose={resetWorkflow}
           isSaving={isSaving}
           pageData={pageData}
+          autoSaveStatus={autoSaveStatus}
+          availableProviders={availableProviders}
         />
       ) : (
         /* Posts List View */
@@ -534,7 +586,7 @@ export default function PostsPage() {
                         </Button>
                         {post.webEnabled && (
                           <Button variant="outline" size="sm" asChild>
-                            <Link href={`/posts/${post.slug}`} target="_blank">
+                            <Link href={`/p/${post.slug}`} target="_blank">
                               <ExternalLink className="h-4 w-4" />
                             </Link>
                           </Button>

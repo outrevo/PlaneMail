@@ -1,23 +1,25 @@
 # PlaneMail
 
-The open-source newsletter platform. Precision Engineered Communication.
+The open-source newsletter platform with white-labeling support. Precision Engineered Communication.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Star on GitHub](https://img.shields.io/github/stars/outrevo/PlaneMail?style=social)](https://github.com/outrevo/PlaneMail)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/yourusername/planemail)
 
 ---
 
 ## ✨ Features
 
-- **Drag & Drop Email Editor**: Create beautiful emails with a modern, block-based editor.
-- **BYOP (Bring Your Own Provider)**: Connect AWS SES, Mailgun, Brevo, or any SMTP provider. No per-subscriber fees.
-- **Full Data Ownership**: Self-host or use our cloud. Your data, your rules.
-- **API-First**: Modern REST API for integration and automation.
-- **Subscriber Management**: Segmentation, import/export, and analytics.
-- **Templates**: Save, reuse, and share email templates.
-- **Analytics**: Track sends, opens, clicks, and more (with privacy in mind).
-- **Microservices Architecture**: Scalable queue service and web app separation.
-- **Open Source**: MIT licensed, transparent, and extensible.
+- **📧 Drag & Drop Email Editor**: Create beautiful emails with a modern, block-based editor
+- **🌐 White-Labeling**: Custom domains, branding, and public newsletter pages
+- **📄 Public Post Pages**: SEO-optimized pages at `/p/[slug]` for each newsletter
+- **🎨 Custom Branding**: Customize colors, logos, and styling for your brand
+- **📬 BYOP (Bring Your Own Provider)**: Connect AWS SES, Mailgun, Brevo, or any SMTP provider
+- **🔒 Full Data Ownership**: Self-host or deploy on Render.com. Your data, your rules
+- **🚀 API-First**: Modern REST API for integration and automation
+- **📊 Subscriber Management**: Segmentation, import/export, and analytics
+- **📝 Templates**: Save, reuse, and share email templates
+- **📈 Analytics**: Track sends, opens, clicks, and more (with privacy in mind)
+- **⚡ Microservices Architecture**: Scalable queue service and web app separation
 
 ## 🏗️ Architecture
 
@@ -36,6 +38,16 @@ PlaneMail uses a modern microservices architecture built with Turborepo:
 - **Shared Package** (`packages/shared`): Common types and utilities
 - **Redis**: Queue storage and job management
 
+## 🚀 Quick Deploy to Render
+
+**One-click deploy** to Render.com with PostgreSQL and Redis included:
+
+1. Click the "Deploy to Render" button above
+2. Configure your environment variables
+3. Add your custom domain in Settings
+
+[📖 **Full Deployment Guide →**](RENDER_DEPLOYMENT.md)
+
 ## 🛠️ Tech Stack
 
 - **Monorepo**: [Turborepo](https://turbo.build/)
@@ -46,7 +58,7 @@ PlaneMail uses a modern microservices architecture built with Turborepo:
 - **Auth**: [Clerk](https://clerk.com/)
 - **UI**: [Radix UI](https://www.radix-ui.com/)
 
-## 🚀 Getting Started
+## 🏃‍♂️ Local Development
 
 ### Prerequisites
 

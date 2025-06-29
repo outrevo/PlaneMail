@@ -1,0 +1,30 @@
+{
+  "name": "planemail",
+  "version": "1.0.0",
+  "description": "PlaneMail Zapier Integration - Newsletter and email marketing automation",
+  "main": "index.js",
+  "scripts": {
+    "test": "zapier test",
+    "push": "zapier push",
+    "validate": "zapier validate"
+  },
+  "dependencies": {
+    "zapier-platform-core": "17.2.0"
+  },
+  "devDependencies": {
+    "zapier-platform-cli": "17.2.0"
+  },
+  "engines": {
+    "node": ">=v18.0.0"
+  },
+  "keywords": [
+    "zapier",
+    "email",
+    "newsletter",
+    "marketing",
+    "automation",
+    "planemail"
+  ],
+  "author": "PlaneMail",
+  "license": "MIT"
+}

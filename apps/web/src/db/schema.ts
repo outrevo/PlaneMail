@@ -1,4 +1,3 @@
-
 import { pgTable, text, varchar, timestamp, uuid, primaryKey, uniqueIndex, boolean, integer, jsonb, serial } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -43,6 +42,21 @@ export const apiKeys = pgTable('api_keys', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   lastUsedAt: timestamp('last_used_at'),
   expiresAt: timestamp('expires_at'),
+});
+
+export const webhooks = pgTable('webhooks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: varchar('user_id', { length: 255 }).notNull().references(() => appUsers.clerkUserId, { onDelete: 'cascade' }),
+  url: text('url').notNull(),
+  events: jsonb('events').notNull(), // Array of event types
+  description: varchar('description', { length: 255 }),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  lastTriggeredAt: timestamp('last_triggered_at'),
+}, (table) => {
+  return {
+    userUrlUnique: uniqueIndex('webhook_user_url_idx').on(table.userId, table.url),
+  };
 });
 
 export const posts = pgTable('posts', {
@@ -150,6 +164,55 @@ export const userSubscriptions = pgTable('user_subscriptions', {
   updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
 });
 
+export const waitlistUsers = pgTable('waitlist_users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const publicSiteSettings = pgTable('public_site_settings', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: varchar('user_id', { length: 255 }).notNull().references(() => appUsers.clerkUserId, { onDelete: 'cascade' }).unique(),
+  
+  // Basic site info
+  siteName: varchar('site_name', { length: 255 }).notNull().default('PlaneMail'),
+  siteDescription: text('site_description').default('Email marketing and newsletter platform'),
+  baseUrl: text('base_url'),
+  logoUrl: text('logo_url'),
+  favicon: text('favicon'),
+  primaryColor: varchar('primary_color', { length: 7 }).default('#1e40af'),
+  
+  // Header/Footer settings
+  headerEnabled: boolean('header_enabled').default(true),
+  headerContent: text('header_content'), // Custom HTML for header
+  footerEnabled: boolean('footer_enabled').default(true),
+  footerContent: text('footer_content'), // Custom HTML for footer
+  
+  // Features
+  enableNewsletterSignup: boolean('enable_newsletter_signup').default(true),
+  
+  // Custom code
+  customCss: text('custom_css'),
+  customJs: text('custom_js'),
+  analyticsCode: text('analytics_code'),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+});
+
+export const customDomains = pgTable('custom_domains', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: varchar('user_id', { length: 255 }).notNull().references(() => appUsers.clerkUserId, { onDelete: 'cascade' }),
+  domain: varchar('domain', { length: 255 }).notNull().unique(),
+  status: varchar('status', { length: 50 }).notNull().default('pending'), // pending, verified, active, failed
+  verificationToken: varchar('verification_token', { length: 100 }),
+  verifiedAt: timestamp('verified_at'),
+  sslStatus: varchar('ssl_status', { length: 50 }).default('pending'), // pending, issued, renewed, failed
+  sslIssuedAt: timestamp('ssl_issued_at'),
+  sslExpiresAt: timestamp('ssl_expires_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+});
 
 // Relations
 export const appUsersRelations = relations(appUsers, ({ one, many }) => ({
@@ -159,11 +222,20 @@ export const appUsersRelations = relations(appUsers, ({ one, many }) => ({
   }),
   integrations: many(userIntegrations),
   apiKeys: many(apiKeys), 
+  webhooks: many(webhooks),
   subscription: one(userSubscriptions, { 
     fields: [appUsers.clerkUserId],
     references: [userSubscriptions.userId],
   }),
   posts: many(posts),
+  siteSettings: one(publicSiteSettings, {
+    fields: [appUsers.clerkUserId],
+    references: [publicSiteSettings.userId],
+  }),
+  customDomain: one(customDomains, {
+    fields: [appUsers.clerkUserId],
+    references: [customDomains.userId],
+  }),
 }));
 
 export const userIntegrationsRelations = relations(userIntegrations, ({ one }) => ({
@@ -176,6 +248,13 @@ export const userIntegrationsRelations = relations(userIntegrations, ({ one }) =
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
   user: one(appUsers, {
     fields: [apiKeys.userId],
+    references: [appUsers.clerkUserId],
+  }),
+}));
+
+export const webhooksRelations = relations(webhooks, ({ one }) => ({
+  user: one(appUsers, {
+    fields: [webhooks.userId],
     references: [appUsers.clerkUserId],
   }),
 }));
@@ -226,8 +305,16 @@ export const userSubscriptionsRelations = relations(userSubscriptions, ({ one })
   }),
 }));
 
-export const waitlistUsers = pgTable('waitlist_users', {
-  id: serial('id').primaryKey(),
-  email: text('email').notNull().unique(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+export const publicSiteSettingsRelations = relations(publicSiteSettings, ({ one }) => ({
+  user: one(appUsers, {
+    fields: [publicSiteSettings.userId],
+    references: [appUsers.clerkUserId],
+  }),
+}));
+
+export const customDomainsRelations = relations(customDomains, ({ one }) => ({
+  user: one(appUsers, {
+    fields: [customDomains.userId],
+    references: [appUsers.clerkUserId],
+  }),
+}));

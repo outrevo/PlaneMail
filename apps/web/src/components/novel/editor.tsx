@@ -6,7 +6,6 @@ import { EditorProvider, useEditor, EditorContent, type Editor, BubbleMenu, type
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
 import TextStyle from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
@@ -46,6 +45,7 @@ import { EditorCommandTunnelContext } from './editor-command-context';
 import { createBaseTemplate } from './slash-commands';
 import { BlockMenu, BlockIndicator } from './block-menu';
 import SlashCommand from './slash-command-extension';
+import { EnhancedImage } from './enhanced-image-extension';
 
 interface NovelEditorProps {
   initialContent?: string | JSONContent;
@@ -265,7 +265,7 @@ export function NovelEditor({
         class: 'text-primary underline underline-offset-[3px] hover:text-primary/80 transition-colors cursor-pointer',
       },
     }),
-    Image.configure({
+    EnhancedImage.configure({
       allowBase64: true,
       HTMLAttributes: {
         class: 'rounded-lg border border-muted max-w-full h-auto my-4',
@@ -437,6 +437,13 @@ export function NovelEditor({
                 editor={editor} 
                 className="px-12 py-8 prose-lg prose-headings:mb-4 prose-p:mb-4 prose-ul:mb-4 prose-ol:mb-4 prose-blockquote:mb-4 prose-pre:mb-4 prose-hr:mb-4 min-h-[500px]" 
               />
+              
+              {/* Subtle word count in bottom left */}
+              {editor && (
+                <div className="absolute bottom-2 left-2 text-xs text-muted-foreground/60 bg-background/80 backdrop-blur-sm px-2 py-1 rounded">
+                  {editor.storage.characterCount.words} words · {editor.storage.characterCount.characters} characters
+                </div>
+              )}
             </div>
             
             {/* Empty state helper */}
