@@ -1,6 +1,5 @@
 
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { customDomainMiddleware, shouldHandleCustomDomain } from "@/lib/middleware/custom-domains";
 
 // Routes that should be accessible to everyone, logged in or not.
 const isPublicRoute = createRouteMatcher([
@@ -10,6 +9,8 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/docs(.*)', // All documentation pages
   '/api/v1/subscribers', // API route for adding subscribers
+  '/api/paddle/webhook', // Paddle webhook
+  '/api/public/(.*)', // Public API routes
   '/privacy-policy', // Privacy policy page
   '/terms-of-service', // Terms of service page
   '/about', // About page
@@ -25,24 +26,14 @@ const isPublicRoute = createRouteMatcher([
   '/static/(.*)', // All static assets
   '/p/(.*)', // Public post pages
   '/archive', // Public archive page
-  '/api/public/(.*)', // Public API routes
   // Add any other public API routes or webhooks here
-  // e.g., '/api/webhooks/(.*)'
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  // Handle custom domains first
-  if (shouldHandleCustomDomain(req)) {
-    return await customDomainMiddleware(req);
+  // Standard Clerk authentication - protect non-public routes
+  if (!isPublicRoute(req)) {
+    await auth.protect();
   }
-
-  // For custom domains, all public routes should be accessible
-  if (req.headers.get('x-custom-domain') && isPublicRoute(req)) {
-    return;
-  }
-
-  // Standard Clerk authentication for main domain
-  if (!isPublicRoute(req)) await auth.protect();
 });
 
 export const config = {
