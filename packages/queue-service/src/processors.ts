@@ -19,18 +19,29 @@ abstract class BaseEmailProcessor {
     let totalSent = 0;
     let totalFailed = 0;
 
-    // Process emails in batches to avoid overwhelming the provider
-    const batchSize = this.getBatchSize();
-    const batches = this.chunkArray(recipients, batchSize);
+    console.log(`📧 Starting bulk email processing for ${recipients.length} recipients`);
 
-    for (let i = 0; i < batches.length; i++) {
-      const batch = batches[i];
-      const batchResults = await this.processBatch(job.data, batch, job);
+    // Process emails in optimized batches for high volume
+    const batchSize = this.getBatchSize();
+    const totalBatches = Math.ceil(recipients.length / batchSize);
+    
+    console.log(`📦 Processing in ${totalBatches} batches of ${batchSize} emails each`);
+
+    // Use cursor-based pagination for memory efficiency
+    let cursor = 0;
+    let batchNumber = 1;
+
+    while (cursor < recipients.length) {
+      const batchEnd = Math.min(cursor + batchSize, recipients.length);
+      const batch = recipients.slice(cursor, batchEnd);
       
+      console.log(`📤 Processing batch ${batchNumber}/${totalBatches} (${batch.length} emails)`);
+      
+      const batchResults = await this.processBatch(job.data, batch, job, batchNumber);
       results.push(...batchResults);
       
-      // Update job progress
-      const progress = Math.round(((i + 1) / batches.length) * 100);
+      // Update job progress more granularly
+      const progress = Math.round((batchEnd / recipients.length) * 100);
       await job.updateProgress(progress);
 
       // Count results
@@ -45,11 +56,30 @@ abstract class BaseEmailProcessor {
         }
       });
 
-      // Add delay between batches to respect rate limits
-      if (i < batches.length - 1) {
-        await this.delay(this.getBatchDelay());
+      // Log progress
+      console.log(`✅ Batch ${batchNumber} completed: ${batchResults.filter(r => r.success).length} sent, ${batchResults.filter(r => !r.success).length} failed`);
+
+      // Move cursor forward
+      cursor = batchEnd;
+      batchNumber++;
+
+      // Add intelligent delay between batches based on provider limits
+      if (cursor < recipients.length) {
+        const delay = this.getBatchDelay();
+        console.log(`⏳ Waiting ${delay}ms before next batch...`);
+        await this.delay(delay);
+      }
+
+      // Memory cleanup for large batches
+      if (batchNumber % 10 === 0) {
+        // Force garbage collection hint for very large email jobs
+        if (global.gc) {
+          global.gc();
+        }
       }
     }
+
+    console.log(`🎉 Bulk email processing completed: ${totalSent} sent, ${totalFailed} failed`);
 
     return {
       success: totalFailed === 0,
@@ -63,7 +93,8 @@ abstract class BaseEmailProcessor {
   private async processBatch(
     jobData: EmailJobData,
     batch: EmailJobData['recipients'],
-    job: Job<EmailJobData>
+    job: Job<EmailJobData>,
+    batchNumber?: number
   ): Promise<EmailSendResult[]> {
     const promises = batch.map((recipient) => 
       this.sendSingleEmail(jobData, recipient).catch((error) => ({
@@ -90,11 +121,11 @@ abstract class BaseEmailProcessor {
 
   // Override these in subclasses based on provider limits
   protected getBatchSize(): number {
-    return 10; // Default batch size
+    return 50; // Increased default batch size for better throughput
   }
 
   protected getBatchDelay(): number {
-    return 1000; // Default 1 second delay between batches
+    return 200; // Reduced default delay for faster processing
   }
 }
 
@@ -147,11 +178,11 @@ export class BrevoEmailProcessor extends BaseEmailProcessor {
   }
 
   protected getBatchSize(): number {
-    return 50; // Brevo allows higher batch sizes
+    return 100; // Brevo allows higher batch sizes
   }
 
   protected getBatchDelay(): number {
-    return 500; // Shorter delay for Brevo
+    return 100; // Faster processing for Brevo
   }
 }
 
@@ -203,11 +234,11 @@ export class MailgunEmailProcessor extends BaseEmailProcessor {
   }
 
   protected getBatchSize(): number {
-    return 100; // Mailgun has high limits
+    return 200; // Mailgun has very high limits
   }
 
   protected getBatchDelay(): number {
-    return 100; // Very short delay for Mailgun
+    return 50; // Minimal delay for Mailgun
   }
 }
 
@@ -266,12 +297,46 @@ export class AmazonSESEmailProcessor extends BaseEmailProcessor {
   }
 
   protected getBatchDelay(): number {
-    return 1000; // 1 second delay to respect rate limits
+    return 1000; // 1 second delay to respect SES rate limits
+  }
+}
+
+// Simple SMTP processor for testing and development
+export class SMTPEmailProcessor extends BaseEmailProcessor {
+  async sendSingleEmail(
+    jobData: EmailJobData,
+    recipient: EmailJobData['recipients'][0]
+  ): Promise<EmailSendResult> {
+    try {
+      const { providerConfig, subject, fromName, fromEmail, htmlContent } = jobData;
+      
+      if (!providerConfig || Object.keys(providerConfig).length === 0) {
+        throw new Error('SMTP configuration is missing');
+      }
+
+      // SMTP is not fully implemented - require real provider
+      throw new Error('SMTP provider is not fully implemented. Please use Brevo, Mailgun, or Amazon SES for sending emails.');
+    } catch (error: any) {
+      return {
+        success: false,
+        recipientEmail: recipient.email,
+        error: error.message || 'Unknown SMTP error',
+        providerResponse: error,
+      };
+    }
+  }
+
+  protected getBatchSize(): number {
+    return 5; // Small batch size for testing
+  }
+
+  protected getBatchDelay(): number {
+    return 1000; // 1 second delay for testing
   }
 }
 
 // Factory function to get the appropriate processor
-export function getEmailProcessor(provider: 'brevo' | 'mailgun' | 'amazon_ses'): BaseEmailProcessor {
+export function getEmailProcessor(provider: 'brevo' | 'mailgun' | 'amazon_ses' | 'smtp'): BaseEmailProcessor {
   switch (provider) {
     case 'brevo':
       return new BrevoEmailProcessor();
@@ -279,6 +344,8 @@ export function getEmailProcessor(provider: 'brevo' | 'mailgun' | 'amazon_ses'):
       return new MailgunEmailProcessor();
     case 'amazon_ses':
       return new AmazonSESEmailProcessor();
+    case 'smtp':
+      return new SMTPEmailProcessor();
     default:
       throw new Error(`Unsupported email provider: ${provider}`);
   }
@@ -288,31 +355,104 @@ export async function processEmailJob(job: Job<EmailJobData>): Promise<BulkEmail
   const { sendingProviderId, recipients, providerConfig } = job.data;
   
   try {
-    // For now, if providerConfig is empty, simulate a successful send for testing
-    if (!providerConfig || Object.keys(providerConfig).length === 0) {
-      console.log('🧪 Simulating email send (no provider config)');
+    console.log(`📧 Processing email job for ${recipients.length} recipients with provider: ${sendingProviderId}`);
+    console.log(`🔧 Provider config keys:`, Object.keys(providerConfig || {}));
+    
+    // Check if we have actual recipients
+    if (!recipients || recipients.length === 0) {
+      console.log('⚠️ No recipients found in job data');
       return {
-        success: true,
-        totalSent: recipients.length,
+        success: false,
+        totalSent: 0,
         totalFailed: 0,
-        results: recipients.map(r => ({
-          success: true,
-          recipientEmail: r.email,
-          messageId: 'sim_' + Math.random().toString(36).substring(7)
-        })),
-        errors: []
+        results: [],
+        errors: ['No recipients provided']
       };
     }
     
-    // Get the appropriate processor
+    // REQUIRE real provider configuration - no simulation allowed
+    const hasProviderConfig = providerConfig && Object.keys(providerConfig).length > 0;
+    console.log(`🔧 Has provider config: ${hasProviderConfig}`);
+    
+    if (!hasProviderConfig) {
+      const errorMessage = 'Email provider configuration is required to send emails. Please configure an email provider in the Integrations section (Brevo, Mailgun, or Amazon SES).';
+      console.error('❌ ' + errorMessage);
+      throw new Error(errorMessage);
+    }
+    
+    // Validate that the provider config matches the selected provider
+    if (!providerConfig[sendingProviderId]) {
+      const errorMessage = `Configuration for provider '${sendingProviderId}' is missing. Please configure this provider in the Integrations section.`;
+      console.error('❌ ' + errorMessage);
+      throw new Error(errorMessage);
+    }
+    
+    // Get the appropriate processor for real email sending
+    console.log(`🚀 Using real email provider: ${sendingProviderId}`);
     const processor = getEmailProcessor(sendingProviderId);
     
-    // Process the email
+    // Process the email with cursor-based pagination
     const result = await processor.processBulkEmail(job);
+    
+    console.log(`📊 Email job completed: ${result.totalSent} sent, ${result.totalFailed} failed`);
     
     return result;
   } catch (error: any) {
-    console.error('Error processing email job:', error);
+    console.error('❌ Error processing email job:', error);
     throw error;
   }
+}
+
+// Utility functions for handling large email jobs
+
+export const EMAIL_JOB_CONSTANTS = {
+  MAX_RECIPIENTS_PER_JOB: 1000, // Split large jobs into smaller chunks
+  PRIORITY_NEWSLETTER: 3,
+  PRIORITY_TRANSACTIONAL: 1,
+  PRIORITY_BULK: 5,
+} as const;
+
+/**
+ * Split a large email job into smaller manageable chunks
+ * This prevents memory issues and allows better queue management
+ */
+export function splitLargeEmailJob(
+  originalJobData: EmailJobData,
+  maxRecipientsPerJob: number = EMAIL_JOB_CONSTANTS.MAX_RECIPIENTS_PER_JOB
+): EmailJobData[] {
+  const { recipients } = originalJobData;
+  
+  if (recipients.length <= maxRecipientsPerJob) {
+    return [originalJobData];
+  }
+
+  const chunks: EmailJobData[] = [];
+  for (let i = 0; i < recipients.length; i += maxRecipientsPerJob) {
+    const chunkRecipients = recipients.slice(i, i + maxRecipientsPerJob);
+    chunks.push({
+      ...originalJobData,
+      recipients: chunkRecipients,
+    });
+  }
+
+  console.log(`📦 Split large job with ${recipients.length} recipients into ${chunks.length} smaller jobs`);
+  return chunks;
+}
+
+/**
+ * Estimate processing time for an email job based on provider and recipient count
+ */
+export function estimateProcessingTime(
+  recipientCount: number,
+  provider: 'brevo' | 'mailgun' | 'amazon_ses'
+): number {
+  const processor = getEmailProcessor(provider);
+  const batchSize = (processor as any).getBatchSize();
+  const batchDelay = (processor as any).getBatchDelay();
+  
+  const batches = Math.ceil(recipientCount / batchSize);
+  const totalDelay = (batches - 1) * batchDelay;
+  const processingTime = batches * 100; // Estimate 100ms per batch processing
+  
+  return totalDelay + processingTime;
 }

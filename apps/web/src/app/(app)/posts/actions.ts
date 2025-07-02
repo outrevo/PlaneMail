@@ -505,6 +505,29 @@ export async function sendPostAsEmail(formDataObj: FormData) {
       );
     }
 
+    // Get subscribers for the selected segments
+    const { getSubscribersBySegments } = await import('@/app/(app)/subscribers/actions');
+    const recipients = await getSubscribersBySegments(validatedSegmentIds);
+
+    console.log(`📧 Preparing to send email to ${recipients.length} subscribers`);
+
+    if (recipients.length === 0) {
+      return { 
+        success: false, 
+        message: 'No active subscribers found in the selected segments', 
+        errors: null 
+      };
+    }
+
+    // Get the actual provider configuration with API keys
+    const providerConfig = await getProviderConfiguration(userId, sendingProviderId);
+    
+    console.log(`🔧 Provider config for ${sendingProviderId}:`, {
+      hasConfig: Object.keys(providerConfig).length > 0,
+      provider: sendingProviderId,
+      configKeys: Object.keys(providerConfig)
+    });
+
     // For now, we'll use the existing newsletter job structure
     // TODO: Update queue service to handle posts directly
     const emailJobData: EmailJobData = {
@@ -516,8 +539,8 @@ export async function sendPostAsEmail(formDataObj: FormData) {
       fromEmail,
       htmlContent: post.content || '',
       sendingProviderId,
-      recipients: [], // Will be populated by the queue service based on segments
-      providerConfig: {}, // Will be populated by the queue service
+      recipients, // Now populated with actual subscribers
+      providerConfig, // Now contains real API keys and configuration
       priority: 1,
       attempts: 0,
       createdAt: new Date(),
@@ -757,5 +780,61 @@ export async function getAvailableEmailProviders(): Promise<{
   } catch (error) {
     console.error('Failed to get email providers:', error);
     return { providers: [] };
+  }
+}
+
+// Helper function to get provider configuration for email sending
+async function getProviderConfiguration(
+  userId: string, 
+  sendingProviderId: 'brevo' | 'mailgun' | 'amazon_ses'
+): Promise<any> {
+  try {
+    const integration = await db.query.userIntegrations.findFirst({
+      where: and(
+        eq(userIntegrations.userId, userId), 
+        eq(userIntegrations.provider, sendingProviderId)
+      ),
+    });
+
+    if (!integration || integration.status !== 'active' || !integration.apiKey) {
+      console.log(`❌ No active ${sendingProviderId} integration found for user ${userId}`);
+      return {};
+    }
+
+    // Return provider-specific configuration
+    switch (sendingProviderId) {
+      case 'brevo':
+        return {
+          brevo: {
+            apiKey: integration.apiKey,
+          }
+        };
+      
+      case 'mailgun':
+        const mailgunMeta = integration.meta as any;
+        return {
+          mailgun: {
+            apiKey: integration.apiKey,
+            domain: mailgunMeta?.domain || '',
+            region: mailgunMeta?.region || 'us',
+          }
+        };
+      
+      case 'amazon_ses':
+        const sesMeta = integration.meta as any;
+        return {
+          amazon_ses: {
+            accessKeyId: integration.apiKey, // In this case, apiKey stores access key
+            secretAccessKey: sesMeta?.secretAccessKey || '',
+            region: sesMeta?.region || 'us-east-1',
+          }
+        };
+      
+      default:
+        return {};
+    }
+  } catch (error) {
+    console.error(`Failed to get provider configuration for ${sendingProviderId}:`, error);
+    return {};
   }
 }

@@ -4,7 +4,7 @@ import { EmailJobData, EmailJobResponse } from '@planemail/shared';
 export class QueueServiceClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = process.env.QUEUE_SERVICE_URL || 'http://localhost:3001') {
+  constructor(baseUrl: string = process.env.QUEUE_SERVICE_URL || 'http://localhost:3002') {
     this.baseUrl = baseUrl;
   }
 

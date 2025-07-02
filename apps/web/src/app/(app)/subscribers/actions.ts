@@ -1,4 +1,3 @@
-
 'use server';
 
 import { db } from '@/lib/drizzle';
@@ -346,5 +345,57 @@ export async function bulkAddSubscribers(
       failedCount: validSubscribersForDb.length - addedCount - updatedCount + (subscribersToImport.length - validSubscribersForDb.length - failedImports.filter(e=>e.rowIndex !== -1).length),
       errors: failedImports
     };
+  }
+}
+
+export async function getSubscribersBySegments(segmentIds?: string[]) {
+  const { userId } = await auth();
+  if (!userId) throw new Error('Not authenticated');
+
+  try {
+    if (!segmentIds || segmentIds.length === 0) {
+      // If no segments specified, get all active subscribers
+      const allSubscribers = await db.query.subscribers.findMany({
+        where: and(
+          eq(subscribers.userId, userId),
+          eq(subscribers.status, 'active')
+        ),
+        columns: {
+          id: true,
+          email: true,
+          name: true,
+        }
+      });
+
+      return allSubscribers.map(sub => ({
+        email: sub.email,
+        name: sub.name || sub.email.split('@')[0], // Fallback to email prefix if no name
+      }));
+    }
+
+    // Get subscribers that belong to specified segments
+    const subscribersInSegments = await db
+      .select({
+        id: subscribers.id,
+        email: subscribers.email,
+        name: subscribers.name,
+      })
+      .from(subscribers)
+      .innerJoin(subscriberSegments, eq(subscribers.id, subscriberSegments.subscriberId))
+      .where(and(
+        eq(subscribers.userId, userId),
+        eq(subscribers.status, 'active'),
+        inArray(subscriberSegments.segmentId, segmentIds)
+      ))
+      .groupBy(subscribers.id, subscribers.email, subscribers.name); // Remove duplicates
+
+    return subscribersInSegments.map(sub => ({
+      email: sub.email,
+      name: sub.name || sub.email.split('@')[0], // Fallback to email prefix if no name
+    }));
+
+  } catch (error) {
+    console.error('Failed to fetch subscribers by segments:', error);
+    throw new Error('Failed to fetch subscribers');
   }
 }

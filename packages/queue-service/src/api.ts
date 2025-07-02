@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import { v4 as uuidv4 } from 'uuid';
 import { emailQueueManager } from './queue-manager';
 import { EmailJobData, EmailJobResponse } from '@planemail/shared';
 
@@ -33,13 +32,12 @@ app.get('/health', async (req, res) => {
 app.post('/api/queue/newsletter', async (req, res) => {
   try {
     const jobData: EmailJobData = req.body;
-    const jobId = uuidv4();
     
     const job = await emailQueueManager.addNewsletterEmail(jobData, { priority: 3 });
     
     const response: EmailJobResponse = {
       success: true,
-      jobId,
+      jobId: job.id!, // Use the actual BullMQ job ID
       message: 'Newsletter job added to queue'
     };
     
@@ -58,13 +56,12 @@ app.post('/api/queue/newsletter', async (req, res) => {
 app.post('/api/queue/transactional', async (req, res) => {
   try {
     const jobData: EmailJobData = req.body;
-    const jobId = uuidv4();
     
     const job = await emailQueueManager.addTransactionalEmail(jobData, { priority: 1 });
     
     const response: EmailJobResponse = {
       success: true,
-      jobId,
+      jobId: job.id!, // Use the actual BullMQ job ID
       message: 'Transactional job added to queue'
     };
     
@@ -83,13 +80,12 @@ app.post('/api/queue/transactional', async (req, res) => {
 app.post('/api/queue/bulk', async (req, res) => {
   try {
     const jobData: EmailJobData = req.body;
-    const jobId = uuidv4();
     
     const job = await emailQueueManager.addBulkEmail(jobData, { priority: 5 });
     
     const response: EmailJobResponse = {
       success: true,
-      jobId,
+      jobId: job.id!, // Use the actual BullMQ job ID
       message: 'Bulk job added to queue'
     };
     
