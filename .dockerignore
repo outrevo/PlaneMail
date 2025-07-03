@@ -1,0 +1,55 @@
+# Node modules
+node_modules
+*/node_modules
+
+# Build outputs
+dist
+.next
+.turbo
+
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+
+# Test and coverage
+coverage
+.nyc_output
+
+# Documentation that's not needed in container
+README.md
+*.md
+
+# Scripts and config files not needed in container
+scripts/
+docs/
+tests/
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Other project files not needed in container
+LICENSE
+*.yaml
+*.yml
+Caddyfile
