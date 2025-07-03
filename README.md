@@ -3,7 +3,7 @@
 The open-source newsletter platform with white-labeling support. Precision Engineered Communication.
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/yourusername/planemail)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/outrevo/planemail)
 
 ---
 
