@@ -4,7 +4,7 @@ services:
     name: planemail-web
     runtime: node
     plan: starter
-    region: oregon
+    region: frankfurt
     buildCommand: cd apps/web && npm install && npm run build
     startCommand: cd apps/web && npm start
     branch: main
@@ -62,7 +62,7 @@ services:
     name: planemail-queue
     runtime: node
     plan: starter
-    region: oregon
+    region: frankfurt
     buildCommand: cd packages/queue-service && npm install && npm run build
     startCommand: cd packages/queue-service && npm run start
     branch: main
@@ -86,9 +86,9 @@ databases:
     databaseName: planemail
     user: planemail
     plan: starter
-    region: oregon
+    region: frankfurt
 
   # Redis for Queues
   - name: planemail-redis
     plan: starter
-    region: oregon
+    region: frankfurt
