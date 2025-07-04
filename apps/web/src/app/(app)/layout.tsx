@@ -32,6 +32,7 @@ import {
 import { Logo } from '@/components/icons/Logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -71,10 +72,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const displayEmail = user?.primaryEmailAddress?.emailAddress;
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-card">
       <SidebarProvider defaultOpen>
-        <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r border-gray-200">
-          <SidebarHeader className="p-4 border-b border-gray-200">
+        <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r border">
+          <SidebarHeader className="p-4 border-b border">
             <Logo />
           </SidebarHeader>
           <SidebarContent className="p-2">
@@ -101,12 +102,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="mt-auto pt-6">
               <SidebarSeparator className="mb-4" />
               <div className="px-3 py-2">
-                <p className="text-xs text-gray-500 mb-2 font-medium" style={{letterSpacing: '-0.01em'}}>OPEN SOURCE</p>
+                <p className="text-xs text-muted-foreground mb-2 font-medium" style={{letterSpacing: '-0.01em'}}>OPEN SOURCE</p>
                 <a
                   href="https://github.com/outrevo/PlaneMail"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs text-gray-600 hover:text-black transition-colors duration-200"
+                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors duration-200"
                   style={{letterSpacing: '-0.01em'}}
                 >
                   <Github className="h-3 w-3" />
@@ -116,7 +117,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </SidebarContent>
           
-          <SidebarFooter className="p-4 border-t border-gray-200">
+          <SidebarFooter className="p-4 border-t">
             {!isLoaded ? (
                <div className="flex items-center gap-3">
                   <Skeleton className="h-8 w-8 rounded-full" />
@@ -137,8 +138,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   }}
                 />
                 <div className="group-data-[collapsible=icon]:hidden flex flex-col">
-                  <span className="text-sm font-medium text-black truncate max-w-[120px]" style={{letterSpacing: '-0.01em'}}>{displayName}</span>
-                  {displayEmail && <span className="text-xs text-gray-500 truncate max-w-[150px]">{displayEmail}</span>}
+                  <span className="text-sm font-medium truncate max-w-[120px]" style={{letterSpacing: '-0.01em'}}>{displayName}</span>
+                  {displayEmail && <span className="text-xs text-muted-foreground truncate max-w-[150px]">{displayEmail}</span>}
                 </div>
               </div>
             ) : null}
@@ -146,15 +147,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </Sidebar>
         
         <SidebarInset className="flex-1">
-          <header className="sticky top-0 z-10 flex h-11 items-center justify-between border-b border-gray-200 bg-white px-6 md:justify-end">
-            <div className="md:hidden">
+          <header className="sticky top-0 z-10 flex h-11 items-center justify-between border-b bg-background px-6">
+            <div className="flex items-center gap-2 md:hidden">
               <SidebarTrigger />
             </div>
-            <div className="hidden md:block">
+            <div className="flex items-center gap-2 md:hidden">
+              <ThemeToggle />
+              {isLoaded && user && <UserButton afterSignOutUrl="/" />}
+            </div>
+            <div className="hidden md:flex md:items-center md:gap-2 md:ml-auto">
+              <ThemeToggle />
               {isLoaded && user && <UserButton afterSignOutUrl="/" />}
             </div>
           </header>
-          <main className="flex-1 p-6 bg-gray-50">{children}</main>
+          <main className="flex-1 p-6 bg-muted/50">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     </div>

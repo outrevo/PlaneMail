@@ -4,6 +4,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ClerkProvider } from '@clerk/nextjs';
 import { Inter } from 'next/font/google';
+import { ThemeProvider } from '@/components/providers/theme-provider';
 
 // import '@usewaypoint/email-builder/dist/index.css'; 
 // ^ Commented out: CSS path 'dist/index.css' is likely for newer versions.
@@ -80,8 +81,10 @@ export default function RootLayout({
         <head>
         </head>
         <body className={`${inter.className} antialiased bg-background text-foreground`}>
-          {children}
-          <Toaster />
+          <ThemeProvider>
+            {children}
+            <Toaster />
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

@@ -11,6 +11,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/v1/subscribers', // API route for adding subscribers
   '/api/paddle/webhook', // Paddle webhook
   '/api/public/(.*)', // Public API routes
+  '/api/images/(.*)', // Image API routes (for development)
   '/privacy-policy', // Privacy policy page
   '/terms-of-service', // Terms of service page
   '/about', // About page

@@ -214,6 +214,40 @@ export const customDomains = pgTable('custom_domains', {
   updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
 });
 
+// Images table for storing uploaded images
+export const images = pgTable('images', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: varchar('user_id', { length: 255 }).notNull().references(() => appUsers.clerkUserId, { onDelete: 'cascade' }),
+  
+  // File information
+  filename: varchar('filename', { length: 255 }).notNull(),
+  originalUrl: text('original_url').notNull(), // Original ImageKit or uploaded URL
+  emailOptimizedUrl: text('email_optimized_url'), // Email-optimized version
+  thumbnailUrl: text('thumbnail_url'), // Thumbnail version
+  
+  // Metadata
+  fileSize: integer('file_size'), // Size in bytes
+  mimeType: varchar('mime_type', { length: 100 }),
+  width: integer('width'),
+  height: integer('height'),
+  
+  // ImageKit specific
+  imagekitFileId: varchar('imagekit_file_id', { length: 255 }), // ImageKit file ID for management
+  imagekitPath: text('imagekit_path'), // Path in ImageKit
+  
+  // Organization
+  folder: varchar('folder', { length: 255 }).default('planemail/posts'), // Folder/category
+  tags: jsonb('tags'), // Array of tags for organization
+  
+  // Usage tracking
+  isDeleted: boolean('is_deleted').default(false),
+  lastUsedAt: timestamp('last_used_at'),
+  usageCount: integer('usage_count').default(0),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+});
+
 // Relations
 export const appUsersRelations = relations(appUsers, ({ one, many }) => ({
   role: one(UserRole, {
@@ -228,6 +262,7 @@ export const appUsersRelations = relations(appUsers, ({ one, many }) => ({
     references: [userSubscriptions.userId],
   }),
   posts: many(posts),
+  images: many(images),
   siteSettings: one(publicSiteSettings, {
     fields: [appUsers.clerkUserId],
     references: [publicSiteSettings.userId],
@@ -315,6 +350,13 @@ export const publicSiteSettingsRelations = relations(publicSiteSettings, ({ one 
 export const customDomainsRelations = relations(customDomains, ({ one }) => ({
   user: one(appUsers, {
     fields: [customDomains.userId],
+    references: [appUsers.clerkUserId],
+  }),
+}));
+
+export const imagesRelations = relations(images, ({ one }) => ({
+  user: one(appUsers, {
+    fields: [images.userId],
     references: [appUsers.clerkUserId],
   }),
 }));

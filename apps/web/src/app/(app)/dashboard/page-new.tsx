@@ -35,7 +35,7 @@ export default async function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {dashboardCards.map((stat) => (
-          <div key={stat.title} className="border border-neutral-200 rounded-lg bg-white p-6 hover:border-neutral-300 transition-colors">
+          <div key={stat.title} className="border border-neutral-200 rounded-lg bg-card p-6 hover:border-neutral-300 transition-colors">
             <div className="flex items-center justify-between mb-4">
               <stat.icon className="h-5 w-5 text-neutral-500" />
               <div className="text-xs text-neutral-500 uppercase tracking-wide">
@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       {/* Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Activity */}
-        <div className="border border-neutral-200 rounded-lg bg-white">
+        <div className="border border-neutral-200 rounded-lg bg-card">
           <div className="p-6 border-b border-neutral-200">
             <div className="flex items-center gap-2">
               <Activity className="h-5 w-5" />
@@ -80,7 +80,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="border border-neutral-200 rounded-lg bg-white">
+        <div className="border border-neutral-200 rounded-lg bg-card">
           <div className="p-6 border-b border-neutral-200">
             <div className="flex items-center gap-2">
               <PieChart className="h-5 w-5" />

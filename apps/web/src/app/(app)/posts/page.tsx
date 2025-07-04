@@ -48,6 +48,8 @@ import {
   type PostWithSegments 
 } from './actions';
 import Link from 'next/link';
+import { NewsletterProgressWidget } from '@/components/newsletter/progress-widget';
+import { useNewsletterJobs } from '@/hooks/use-newsletter-jobs';
 import { NovelEditor } from '@/components/novel/editor';
 import { FullScreenPostEditor } from '@/components/novel/full-screen-editor';
 import { useDebouncedCallback } from 'use-debounce';
@@ -105,6 +107,15 @@ export default function PostsPage() {
   // Auto-save state
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [availableProviders, setAvailableProviders] = useState<any[]>([]);
+
+  // Newsletter jobs tracking
+  const { 
+    jobs: newsletterJobs, 
+    addJob: addNewsletterJob, 
+    removeJob: removeNewsletterJob, 
+    markJobCompleted,
+    clearJobs: clearNewsletterJobs 
+  } = useNewsletterJobs();
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -316,6 +327,25 @@ export default function PostsPage() {
         const results = await Promise.all(promises);
         const failed = results.filter(r => !r.success);
         
+        // Track newsletter job if email was sent successfully
+        if (workflowData.emailEnabled) {
+          const emailResult = results[0] as any; // Email is always first promise
+          if (emailResult.success && emailResult.jobId) {
+            // Estimate recipient count - use a simple approximation
+            const totalRecipients = workflowData.selectedSegments.length > 0 
+              ? 50 // Approximation - could be improved with actual counts
+              : 100; // Default for all subscribers
+
+            addNewsletterJob({
+              jobId: emailResult.jobId,
+              postTitle: workflowData.title || 'Untitled Post',
+              recipientCount: totalRecipients,
+              createdAt: new Date(),
+              postId: editingPostId
+            });
+          }
+        }
+        
         if (failed.length === 0) {
           toast({
             title: 'Success',
@@ -478,6 +508,16 @@ export default function PostsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Newsletter Progress Widget */}
+      {newsletterJobs.length > 0 && (
+        <NewsletterProgressWidget
+          jobs={newsletterJobs}
+          onJobComplete={markJobCompleted}
+          onJobRemove={removeNewsletterJob}
+          onClearAll={clearNewsletterJobs}
+        />
+      )}
 
       {showCreateFlow ? (
         <FullScreenPostEditor

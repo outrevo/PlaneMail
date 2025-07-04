@@ -31,6 +31,7 @@ type ColumnMapping = {
 };
 
 const MAX_PREVIEW_ROWS = 5;
+const CHUNK_SIZE = 100; // Reduced from 1000 to 100 for better reliability
 const VALID_STATUSES = ['active', 'unsubscribed', 'pending', 'bounced'];
 
 export function ImportSubscribersDialog({ isOpen, onOpenChange, segments, onImportComplete }: ImportSubscribersDialogProps) {
@@ -74,7 +75,7 @@ export function ImportSubscribersDialog({ isOpen, onOpenChange, segments, onImpo
       Papa.parse<Record<string, string>>(selectedFile, {
         header: true,
         skipEmptyLines: true,
-        preview: MAX_PREVIEW_ROWS + 1, // +1 to get headers from the first actual data row if needed by Papa
+        // Don't use preview to parse the full file
         complete: (results) => {
           if (results.errors.length > 0) {
             toast({ title: 'CSV Parsing Error', description: results.errors[0].message, variant: 'destructive' });
@@ -89,7 +90,8 @@ export function ImportSubscribersDialog({ isOpen, onOpenChange, segments, onImpo
 
           const headers = results.meta.fields;
           setFileHeaders(headers);
-          setParsedData(results.data); // Store all parsed data
+          setParsedData(results.data); // Store all parsed data (full file)
+          // Create preview rows from the full data
           setFilePreviewRows(results.data.slice(0, MAX_PREVIEW_ROWS).map(row => headers.map(header => row[header])));
           
           // Auto-map common headers
@@ -133,17 +135,7 @@ export function ImportSubscribersDialog({ isOpen, onOpenChange, segments, onImpo
     setIsImporting(true);
     setImportResult(null);
 
-    // Re-parse the full file for actual import if parsedData only has preview
-    // This assumes `parsedData` from the initial parse (up to MAX_PREVIEW_ROWS+1) might not be the full dataset.
-    // For large files, it's better to re-stream or parse fully here.
-    // For simplicity, if `parsedData` was limited by preview, we re-parse.
-    // However, PapaParse's `preview` still parses the whole file then gives you the preview slice.
-    // So `parsedData` might already be the full data if preview count was high enough or not used to limit data array.
-    // Let's assume `Papa.parse` during `handleFileChange` already processed the entire file
-    // and `parsedData` holds all rows if `preview` was only for the previewRows generation.
-    // If `preview` in PapaParse limits the `results.data` array itself, then a full re-parse is needed here.
-    // Assuming `parsedData` is complete based on current logic (it is):
-    
+    // parsedData now contains the full CSV file data
     const subscribersToImport: SubscriberImportData[] = parsedData.map(row => {
       const subscriber: SubscriberImportData = { email: '' };
       for (const header in columnMappings) {
@@ -170,16 +162,149 @@ export function ImportSubscribersDialog({ isOpen, onOpenChange, segments, onImpo
         return;
     }
 
+    // Process in chunks for large files
+    let totalAdded = 0;
+    let totalUpdated = 0;
+    let totalFailed = 0;
+    let allErrors: any[] = [];
+
     startTransition(async () => {
-      const result = await bulkAddSubscribers(subscribersToImport, selectedSegmentIds);
-      setImportResult(result);
-      setCurrentStep(3);
-      setIsImporting(false);
-      if (result.success) {
-        toast({ title: 'Import Successful', description: result.message });
-        onImportComplete(); // Refresh the main subscribers list
-      } else {
-        toast({ title: 'Import Failed', description: result.message || 'An error occurred.', variant: 'destructive' });
+      try {
+        if (subscribersToImport.length <= CHUNK_SIZE) {
+          // Small file, process in one batch
+          const result = await bulkAddSubscribers(subscribersToImport, selectedSegmentIds);
+          setImportResult(result);
+          setCurrentStep(3);
+          setIsImporting(false);
+          if (result.success) {
+            toast({ title: 'Import Successful', description: result.message });
+            onImportComplete();
+          } else {
+            toast({ title: 'Import Failed', description: result.message || 'An error occurred.', variant: 'destructive' });
+          }
+        } else {
+          // Large file, process in chunks
+          const chunks = [];
+          for (let i = 0; i < subscribersToImport.length; i += CHUNK_SIZE) {
+            chunks.push(subscribersToImport.slice(i, i + CHUNK_SIZE));
+          }
+
+          let chunkIndex = 0;
+          for (const chunk of chunks) {
+            chunkIndex++;
+            
+            // Update toast to show progress
+            toast({ 
+              title: 'Processing Import', 
+              description: `Processing chunk ${chunkIndex} of ${chunks.length} (${chunk.length} subscribers)...` 
+            });
+
+            try {
+              const result = await bulkAddSubscribers(chunk, selectedSegmentIds);
+              
+              totalAdded += result.addedCount;
+              totalUpdated += result.updatedCount;
+              totalFailed += result.failedCount;
+              
+              if (result.errors) {
+                // Adjust row indices for chunked processing
+                const adjustedErrors = result.errors.map(error => ({
+                  ...error,
+                  rowIndex: error.rowIndex !== -1 ? error.rowIndex + (chunkIndex - 1) * CHUNK_SIZE : error.rowIndex
+                }));
+                allErrors.push(...adjustedErrors);
+              }
+
+              if (!result.success && chunkIndex === 1) {
+                // If the first chunk fails completely, stop processing
+                setImportResult({
+                  success: false,
+                  message: `Import failed on first chunk: ${result.message}`,
+                  addedCount: totalAdded,
+                  updatedCount: totalUpdated,
+                  failedCount: totalFailed,
+                  errors: allErrors.length > 0 ? allErrors : undefined
+                });
+                setCurrentStep(3);
+                setIsImporting(false);
+                toast({ title: 'Import Failed', description: `First chunk failed: ${result.message}`, variant: 'destructive' });
+                return;
+              }
+            } catch (chunkError) {
+              console.error(`Chunk ${chunkIndex} failed:`, chunkError);
+              
+              // Add all subscribers in this chunk as failed
+              const chunkFailedCount = chunk.length;
+              totalFailed += chunkFailedCount;
+              
+              const errorMessage = chunkError instanceof Error ? chunkError.message : 'Unknown error processing chunk';
+              
+              // Add individual errors for each subscriber in the failed chunk
+              for (let i = 0; i < chunk.length; i++) {
+                allErrors.push({
+                  rowIndex: (chunkIndex - 1) * CHUNK_SIZE + i,
+                  email: chunk[i].email,
+                  error: `Chunk processing failed: ${errorMessage}`
+                });
+              }
+              
+              // Continue with next chunk unless this is a critical error
+              if (chunkIndex === 1) {
+                setImportResult({
+                  success: false,
+                  message: `Import failed: ${errorMessage}`,
+                  addedCount: totalAdded,
+                  updatedCount: totalUpdated,
+                  failedCount: totalFailed,
+                  errors: allErrors.length > 0 ? allErrors : undefined
+                });
+                setCurrentStep(3);
+                setIsImporting(false);
+                toast({ title: 'Import Failed', description: errorMessage, variant: 'destructive' });
+                return;
+              }
+            }
+            
+            // Add a small delay between chunks to prevent overwhelming the server
+            if (chunkIndex < chunks.length) {
+              await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+            }
+          }
+
+          // All chunks processed
+          const finalResult: ImportSubscribersResult = {
+            success: totalFailed < subscribersToImport.length,
+            message: `Import complete. Added: ${totalAdded}, Updated: ${totalUpdated}, Failed: ${totalFailed} out of ${subscribersToImport.length} total.`,
+            addedCount: totalAdded,
+            updatedCount: totalUpdated,
+            failedCount: totalFailed,
+            errors: allErrors.length > 0 ? allErrors : undefined
+          };
+
+          setImportResult(finalResult);
+          setCurrentStep(3);
+          setIsImporting(false);
+          
+          if (finalResult.success) {
+            toast({ title: 'Import Successful', description: finalResult.message });
+            onImportComplete();
+          } else {
+            toast({ title: 'Import Completed with Errors', description: finalResult.message, variant: 'destructive' });
+          }
+        }
+      } catch (error) {
+        console.error('Import error:', error);
+        setImportResult({
+          success: false,
+          message: `Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          addedCount: totalAdded,
+          updatedCount: totalUpdated,
+          failedCount: subscribersToImport.length - totalAdded - totalUpdated,
+          errors: allErrors.length > 0 ? allErrors : undefined
+        });
+        setCurrentStep(3);
+        setIsImporting(false);
+        toast({ title: 'Import Failed', description: 'An unexpected error occurred.', variant: 'destructive' });
       }
     });
   };
@@ -228,7 +353,14 @@ export function ImportSubscribersDialog({ isOpen, onOpenChange, segments, onImpo
           <div className="py-4 space-y-6 flex-grow overflow-y-auto">
             <div>
               <h3 className="text-lg font-semibold mb-2">Column Mapping</h3>
-              <p className="text-sm text-muted-foreground mb-3">Match your CSV columns to the corresponding subscriber fields.</p>
+              <p className="text-sm text-muted-foreground mb-3">
+                Match your CSV columns to the corresponding subscriber fields. Found {parsedData.length} rows to import.
+                {parsedData.length > CHUNK_SIZE && (
+                  <span className="block mt-1 text-amber-600 dark:text-amber-400">
+                    ⚠️ Large file detected. Import will be processed in chunks of {CHUNK_SIZE} for optimal performance.
+                  </span>
+                )}
+              </p>
               <ScrollArea className="max-h-[300px] border rounded-md">
                 <Table>
                   <TableHeader>
@@ -360,7 +492,10 @@ export function ImportSubscribersDialog({ isOpen, onOpenChange, segments, onImpo
               <Button variant="outline" onClick={() => setCurrentStep(1)} disabled={isImporting}>Back</Button>
               <Button onClick={handleImport} disabled={isImporting || isPending} className="bg-accent hover:bg-accent/90 text-accent-foreground">
                 {isImporting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Import Subscribers
+                {isImporting 
+                  ? (parsedData.length > CHUNK_SIZE ? 'Processing Large File...' : 'Importing...') 
+                  : `Import ${parsedData.length} Subscribers`
+                }
               </Button>
             </>
           )}

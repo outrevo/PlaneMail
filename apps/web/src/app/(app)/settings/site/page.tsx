@@ -461,7 +461,7 @@ export default function SiteSettingsPage() {
                     )}
                   </Button>
                 </div>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Enter the subdomain you want to use (e.g., newsletter.yourdomain.com)
                 </p>
               </div>
@@ -470,7 +470,7 @@ export default function SiteSettingsPage() {
                 <h4 className="font-medium mb-3">Your Domains</h4>
                 <div className="border rounded-lg divide-y">
                   {customDomains.length === 0 ? (
-                    <div className="p-4 text-center text-gray-500">
+                    <div className="p-4 text-center text-muted-foreground">
                       No custom domains configured yet
                     </div>
                   ) : (
@@ -478,7 +478,7 @@ export default function SiteSettingsPage() {
                       <div key={domain.id} className="p-4 flex items-center justify-between">
                         <div>
                           <div className="text-sm font-medium">{domain.domain}</div>
-                          <div className="text-xs text-gray-500 flex items-center gap-1">
+                          <div className="text-xs text-muted-foreground flex items-center gap-1">
                             {domain.status === 'verified' || domain.status === 'active' ? (
                               <>
                                 <Check className="h-3 w-3 text-green-500" />
@@ -521,23 +521,23 @@ export default function SiteSettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="bg-muted/50 border border rounded-lg p-4">
                 <h4 className="font-medium text-gray-900 mb-2">DNS Configuration</h4>
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm text-muted-foreground mb-3">
                   Add this CNAME record to your DNS provider:
                 </p>
-                <div className="bg-white border rounded p-3 font-mono text-sm">
+                <div className="bg-card border rounded p-3 font-mono text-sm">
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <span className="text-gray-500">Name:</span><br />
+                      <span className="text-muted-foreground">Name:</span><br />
                       <code>newsletter</code>
                     </div>
                     <div>
-                      <span className="text-gray-500">Type:</span><br />
+                      <span className="text-muted-foreground">Type:</span><br />
                       <code>CNAME</code>
                     </div>
                     <div>
-                      <span className="text-gray-500">Value:</span><br />
+                      <span className="text-muted-foreground">Value:</span><br />
                       <code>planemail.app</code>
                     </div>
                   </div>

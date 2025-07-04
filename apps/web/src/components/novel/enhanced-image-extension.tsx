@@ -6,6 +6,12 @@ export interface ImageOptions {
   inline: boolean;
   allowBase64: boolean;
   HTMLAttributes: Record<string, any>;
+  uploadFunction?: (file: File) => Promise<{
+    url: string;
+    emailOptimizedUrl: string;
+    thumbnailUrl: string;
+  } | null>;
+  onOpenLibrary?: () => void;
 }
 
 declare module '@tiptap/core' {
@@ -23,6 +29,19 @@ declare module '@tiptap/core' {
         align?: 'left' | 'center' | 'right';
         caption?: string;
       }) => ReturnType;
+      /**
+       * Upload and add an image
+       */
+      uploadImage: (file: File, options?: {
+        alt?: string;
+        title?: string;
+        align?: 'left' | 'center' | 'right';
+        caption?: string;
+      }) => ReturnType;
+      /**
+       * Open image library
+       */
+      openImageLibrary: () => ReturnType;
     };
   }
 }
@@ -35,6 +54,8 @@ export const EnhancedImage = Node.create<ImageOptions>({
       inline: false,
       allowBase64: false,
       HTMLAttributes: {},
+      uploadFunction: undefined,
+      onOpenLibrary: undefined,
     };
   },
 
@@ -111,6 +132,98 @@ export const EnhancedImage = Node.create<ImageOptions>({
             type: this.name,
             attrs: options,
           });
+        },
+      uploadImage:
+        (file, options = {}) =>
+        ({ commands, editor }) => {
+          if (!this.options.uploadFunction) {
+            console.warn('Upload function not provided to EnhancedImage extension, falling back to base64');
+            // Fallback to base64 if no upload function is provided
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const base64 = e.target?.result as string;
+              commands.insertContent({
+                type: this.name,
+                attrs: {
+                  src: base64,
+                  alt: options.alt || file.name,
+                  title: options.title || file.name,
+                  align: options.align || 'center',
+                  caption: options.caption,
+                },
+              });
+            };
+            reader.readAsDataURL(file);
+            return true;
+          }
+
+          // Handle upload asynchronously but return true immediately
+          this.options.uploadFunction(file)
+            .then((uploadResult) => {
+              if (uploadResult) {
+                // Use the email-optimized URL for the editor
+                commands.insertContent({
+                  type: this.name,
+                  attrs: {
+                    src: uploadResult.emailOptimizedUrl,
+                    alt: options.alt || file.name,
+                    title: options.title || file.name,
+                    align: options.align || 'center',
+                    caption: options.caption,
+                  },
+                });
+                console.log('Image uploaded successfully to ImageKit:', uploadResult.emailOptimizedUrl);
+              } else {
+                console.error('Upload failed: No result returned, falling back to base64');
+                // Fallback to base64 if upload fails
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  const base64 = e.target?.result as string;
+                  commands.insertContent({
+                    type: this.name,
+                    attrs: {
+                      src: base64,
+                      alt: options.alt || file.name,
+                      title: options.title || file.name,
+                      align: options.align || 'center',
+                      caption: options.caption,
+                    },
+                  });
+                };
+                reader.readAsDataURL(file);
+              }
+            })
+            .catch((error) => {
+              console.error('Image upload failed:', error, 'falling back to base64');
+              // Fallback to base64 if upload fails
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const base64 = e.target?.result as string;
+                commands.insertContent({
+                  type: this.name,
+                  attrs: {
+                    src: base64,
+                    alt: options.alt || file.name,
+                    title: options.title || file.name,
+                    align: options.align || 'center',
+                    caption: options.caption,
+                  },
+                });
+              };
+              reader.readAsDataURL(file);
+            });
+
+          return true; // Return immediately, upload happens asynchronously
+        },
+      openImageLibrary:
+        () =>
+        ({ commands, editor }) => {
+          if (this.options.onOpenLibrary) {
+            this.options.onOpenLibrary();
+          } else {
+            console.warn('Image library handler not configured');
+          }
+          return true;
         },
     };
   },

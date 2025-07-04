@@ -19,7 +19,8 @@ import {
   CheckSquare,
   Table,
   Calendar,
-  FileText
+  FileText,
+  Images
 } from 'lucide-react';
 
 export interface SuggestionItem {
@@ -186,34 +187,6 @@ export const SlashCommandList = ({ items, command }: SlashCommandListProps) => {
   );
 };
 
-// Enhanced image upload function
-const uploadImage = async (editor: any, range: any) => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.multiple = false;
-  
-  input.onchange = (e: any) => {
-    const file = e.target?.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        const src = e.target?.result;
-        if (src) {
-          editor.chain().focus().deleteRange(range).setImage({ 
-            src,
-            alt: file.name,
-            title: file.name
-          }).run();
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-  
-  input.click();
-};
-
 // Default slash command items
 export const defaultSlashCommands: SuggestionItem[] = [
   {
@@ -282,10 +255,13 @@ export const defaultSlashCommands: SuggestionItem[] = [
   },
   {
     title: 'Image',
-    description: 'Upload an image from your device',
+    description: 'Browse and upload images',
     icon: Image,
     command: ({ editor, range }: any) => {
-      uploadImage(editor, range);
+      // Delete the slash command text
+      editor.chain().focus().deleteRange(range).run();
+      // Open the image library
+      editor.commands.openImageLibrary();
     },
   },
   {

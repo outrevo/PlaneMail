@@ -16,11 +16,12 @@ import {
   RotateCw,
   Crop,
   Download,
-  ExternalLink
+  ExternalLink,
+  Image
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 
-export function ImageNodeView({ node, updateAttributes, selected, deleteNode }: NodeViewProps) {
+export function ImageNodeView({ node, updateAttributes, selected, deleteNode, editor }: NodeViewProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempSettings, setTempSettings] = useState({
     alt: node.attrs.alt || '',
@@ -42,6 +43,12 @@ export function ImageNodeView({ node, updateAttributes, selected, deleteNode }: 
 
   const handleAlignChange = (align: 'left' | 'center' | 'right') => {
     updateAttributes({ align });
+  };
+
+  const handleOpenImageLibrary = () => {
+    if (editor) {
+      editor.commands.openImageLibrary();
+    }
   };
 
   const getAlignmentClass = () => {
@@ -101,6 +108,18 @@ export function ImageNodeView({ node, updateAttributes, selected, deleteNode }: 
                   className="h-6 w-6 p-0"
                 >
                   <AlignRight className="h-3 w-3" />
+                </Button>
+                
+                <div className="w-px h-4 bg-gray-300 mx-1" />
+                
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleOpenImageLibrary}
+                  className="h-6 w-6 p-0"
+                  title="Replace Image"
+                >
+                  <Image className="h-3 w-3" />
                 </Button>
                 
                 <div className="w-px h-4 bg-gray-300 mx-1" />

@@ -3,6 +3,7 @@
 import './editor.css';
 import React, { useEffect, useState, useRef } from 'react';
 import { EditorProvider, useEditor, EditorContent, type Editor, BubbleMenu, type JSONContent } from '@tiptap/react';
+import { NodeSelection } from '@tiptap/pm/state';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -36,7 +37,8 @@ import {
   List,
   ListOrdered,
   Quote,
-  Code2
+  Code2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Provider } from 'jotai';
 import tunnel from 'tunnel-rat';
@@ -46,6 +48,10 @@ import { createBaseTemplate } from './slash-commands';
 import { BlockMenu, BlockIndicator } from './block-menu';
 import SlashCommand from './slash-command-extension';
 import { EnhancedImage } from './enhanced-image-extension';
+import { useImageUpload } from '@/hooks/use-image-upload';
+import { Progress } from '@/components/ui/progress';
+import { Loader2 } from 'lucide-react';
+import { ImageLibrary } from './image-library';
 
 interface NovelEditorProps {
   initialContent?: string | JSONContent;
@@ -84,6 +90,10 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
     editor.chain().focus().unsetLink().run();
   };
 
+  const openImageLibrary = () => {
+    editor.commands.openImageLibrary();
+  };
+
   return (
     <BubbleMenu
       editor={editor}
@@ -92,7 +102,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         onShow: () => setIsOpen(true),
         onHide: () => setIsOpen(false),
       }}
-      className="bg-background border border-border rounded-lg shadow-xl p-1 flex items-center gap-1"
+      className="bg-background border border-border rounded-lg shadow-lg p-1 flex items-center gap-0.5"
     >
       {/* Text Formatting */}
       <Button
@@ -204,6 +214,19 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
+      {/* Image */}
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={openImageLibrary}
+        className="h-8 w-8 p-0"
+        title="Insert Image"
+      >
+        <ImageIcon className="h-4 w-4" />
+      </Button>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
       {/* Link */}
       {editor.isActive('link') ? (
         <Button
@@ -239,7 +262,62 @@ export function NovelEditor({
   const [saveStatus, setSaveStatus] = useState('Saved');
   const [blockMenuVisible, setBlockMenuVisible] = useState(false);
   const [blockMenuPosition, setBlockMenuPosition] = useState({ top: 0, left: 0 });
+  const [imageLibraryOpen, setImageLibraryOpen] = useState(false);
   const tunnelInstance = useRef(tunnel()).current;
+  const { uploadImage, isUploading, uploadProgress } = useImageUpload();
+
+  // Create upload function that will be passed to the extension
+  const handleImageKitUpload = async (file: File) => {
+    console.log('handleImageKitUpload called for file:', file.name);
+    try {
+      const result = await uploadImage(file, {
+        folder: 'planemail/posts',
+        tags: 'post-image'
+      });
+      console.log('Upload result:', result);
+      
+      if (!result) {
+        console.warn('ImageKit upload failed, will fallback to base64');
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Upload failed:', error);
+      console.warn('ImageKit upload failed, will fallback to base64');
+      return null;
+    }
+  };
+
+  // Handle image library
+  const handleOpenImageLibrary = () => {
+    setImageLibraryOpen(true);
+  };
+
+  const handleImageSelect = (image: any) => {
+    if (editor) {
+      // Check if there's a currently selected image node
+      const { state } = editor;
+      const { selection } = state;
+      
+      // Check if we have a NodeSelection and it's an image
+      if (selection instanceof NodeSelection && 
+          selection.node.type.name === 'enhancedImage') {
+        // Replace the selected image
+        editor.commands.updateAttributes('enhancedImage', {
+          src: image.emailOptimizedUrl,
+          alt: image.filename,
+          title: image.filename,
+        });
+      } else {
+        // Insert new image
+        editor.commands.setImage({
+          src: image.emailOptimizedUrl,
+          alt: image.filename,
+          title: image.filename,
+        });
+      }
+    }
+  };
 
   const extensions = [
     StarterKit.configure({
@@ -266,10 +344,12 @@ export function NovelEditor({
       },
     }),
     EnhancedImage.configure({
-      allowBase64: true,
+      allowBase64: true, // Allow base64 as fallback when ImageKit is not configured
       HTMLAttributes: {
         class: 'rounded-lg border border-muted max-w-full h-auto my-4',
       },
+      uploadFunction: handleImageKitUpload,
+      onOpenLibrary: handleOpenImageLibrary,
     }),
     TextStyle,
     Color,
@@ -298,6 +378,26 @@ export function NovelEditor({
     SlashCommand,
   ];
 
+  // Function to trigger file input for image upload
+  const triggerImageUpload = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file && editor) {
+        console.log('Manual upload triggered for file:', file.name);
+        setSaveStatus('Saving');
+        editor.commands.uploadImage(file);
+        // Reset status after a delay to allow upload to complete
+        setTimeout(() => {
+          setSaveStatus('Saved');
+        }, 3000);
+      }
+    };
+    input.click();
+  };
+
   const editor = useEditor({
     extensions,
     content: typeof initialContent === 'string' 
@@ -306,7 +406,7 @@ export function NovelEditor({
     editable,
     editorProps: {
       attributes: {
-        class: `prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full prose-pre:bg-muted prose-pre:text-foreground prose-img:my-4 ${className}`,
+        class: `prose prose-lg dark:prose-invert prose-headings:font-title font-default focus:outline-none max-w-full prose-pre:bg-muted prose-pre:text-foreground prose-img:my-4 prose-p:leading-relaxed prose-headings:tracking-tight ${className}`,
       },
       handleDrop: (view, event, slice, moved) => {
         // Handle file drops
@@ -314,18 +414,17 @@ export function NovelEditor({
         if (hasFiles && event.dataTransfer.files[0]) {
           const file = event.dataTransfer.files[0];
           if (file.type.includes('image/')) {
-            // Handle image upload
+            // Handle image upload with ImageKit via extension
             event.preventDefault();
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const base64 = e.target?.result as string;
-              editor?.chain().focus().setImage({ 
-                src: base64,
-                alt: file.name,
-                title: file.name
-              }).run();
-            };
-            reader.readAsDataURL(file);
+            if (editor) {
+              console.log('Dropping image file:', file.name);
+              setSaveStatus('Saving');
+              editor.commands.uploadImage(file);
+              // Reset status after a delay to allow upload to complete
+              setTimeout(() => {
+                setSaveStatus('Saved');
+              }, 3000);
+            }
             return true;
           }
         }
@@ -338,18 +437,15 @@ export function NovelEditor({
         
         if (imageItem) {
           const file = imageItem.getAsFile();
-          if (file) {
+          if (file && editor) {
             event.preventDefault();
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              const base64 = e.target?.result as string;
-              editor?.chain().focus().setImage({ 
-                src: base64,
-                alt: 'Pasted image',
-                title: 'Pasted image'
-              }).run();
-            };
-            reader.readAsDataURL(file);
+            console.log('Pasting image file:', file.name);
+            setSaveStatus('Saving');
+            editor.commands.uploadImage(file);
+            // Reset status after a delay to allow upload to complete
+            setTimeout(() => {
+              setSaveStatus('Saved');
+            }, 3000);
             return true;
           }
         }
@@ -399,21 +495,8 @@ export function NovelEditor({
     <Provider store={novelStore}>
       <EditorCommandTunnelContext.Provider value={tunnelInstance}>
         <div className="relative w-full">
-          {/* Save Status */}
-          <div className="absolute right-5 top-5 z-10 mb-5 gap-2 flex">
-            <div className="rounded-lg bg-accent px-2 py-1 text-sm text-muted-foreground">
-              {saveStatus}
-            </div>
-            <div className="rounded-lg bg-accent px-2 py-1 text-sm text-muted-foreground">
-              {editor.storage.characterCount?.words() || 0} words
-            </div>
-            <div className="rounded-lg bg-accent px-2 py-1 text-sm text-muted-foreground">
-              {editor.storage.characterCount?.characters() || 0} characters
-            </div>
-          </div>
-
           {/* Editor */}
-          <div className="relative min-h-[600px] w-full bg-background group">
+          <div className="relative min-h-[600px] w-full bg-background border border-border rounded-lg group overflow-hidden">
             <EditorBubbleMenu editor={editor} />
             
             {/* Block Menu */}
@@ -435,33 +518,59 @@ export function NovelEditor({
             <div className="relative">
               <EditorContent 
                 editor={editor} 
-                className="px-12 py-8 prose-lg prose-headings:mb-4 prose-p:mb-4 prose-ul:mb-4 prose-ol:mb-4 prose-blockquote:mb-4 prose-pre:mb-4 prose-hr:mb-4 min-h-[500px]" 
+                className="px-8 py-6 prose-lg prose-headings:mb-4 prose-p:mb-4 prose-ul:mb-4 prose-ol:mb-4 prose-blockquote:mb-4 prose-pre:mb-4 prose-hr:mb-4 min-h-[500px] focus-within:outline-none" 
               />
               
-              {/* Subtle word count in bottom left */}
+              {/* Professional Empty State */}
+              {!showBaseTemplate && editor.getText().trim() === '' && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center max-w-md mx-auto px-6">
+                    <div className="text-4xl mb-4">✍️</div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Start crafting your story
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Begin writing your newsletter content. Use "/" to access commands for formatting, adding images, and more.
+                    </p>
+                    <div className="flex flex-wrap gap-2 justify-center text-xs text-muted-foreground">
+                      <span className="bg-muted px-2 py-1 rounded">/ for commands</span>
+                      <span className="bg-muted px-2 py-1 rounded">Drag & drop images</span>
+                      <span className="bg-muted px-2 py-1 rounded">Paste from clipboard</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Image Upload Progress */}
+              {isUploading && (
+                <div className="absolute top-3 right-3 bg-background/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-lg min-w-[250px]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm font-medium">Uploading image...</span>
+                  </div>
+                  <Progress value={uploadProgress} className="w-full h-2" />
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {uploadProgress}% complete
+                  </div>
+                </div>
+              )}
+              
+              {/* Word count in bottom right */}
               {editor && (
-                <div className="absolute bottom-2 left-2 text-xs text-muted-foreground/60 bg-background/80 backdrop-blur-sm px-2 py-1 rounded">
-                  {editor.storage.characterCount.words} words · {editor.storage.characterCount.characters} characters
+                <div className="absolute bottom-3 right-3 text-xs text-muted-foreground/50 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-md border border-border/50">
+                  {saveStatus} · {editor.storage.characterCount?.words() || 0} words
                 </div>
               )}
             </div>
-            
-            {/* Empty state helper */}
-            {editor.isEmpty && (
-              <div className="absolute inset-0 px-12 py-8 pointer-events-none">
-                <div className="text-muted-foreground text-lg">
-                  <div className="mb-4 text-2xl font-semibold">Start writing...</div>
-                  <div className="space-y-2 text-sm">
-                    <div>• Type <kbd className="px-1 py-0.5 bg-muted rounded text-xs font-mono">/</kbd> for commands</div>
-                    <div>• Drag and drop images to upload</div>
-                    <div>• Paste images from clipboard</div>
-                    <div>• Use the bubble menu for formatting</div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
+        
+        {/* Image Library Modal */}
+        <ImageLibrary
+          open={imageLibraryOpen}
+          onClose={() => setImageLibraryOpen(false)}
+          onImageSelect={handleImageSelect}
+        />
       </EditorCommandTunnelContext.Provider>
     </Provider>
   );

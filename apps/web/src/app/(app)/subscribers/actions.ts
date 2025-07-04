@@ -14,40 +14,72 @@ const subscriberSchema = z.object({
   segmentIds: z.array(z.string().uuid()).optional().default([]),
 });
 
-export async function getSubscribers(searchTerm?: string) {
+export async function getSubscribers(searchTerm?: string, page = 1, limit = 50, statusFilter?: string) {
   const { userId } = await auth();
   if (!userId) throw new Error('Not authenticated');
 
   try {
-    const userSubscribers = await db.query.subscribers.findMany({
-        where: and(
-            eq(subscribers.userId, userId),
-            searchTerm ? 
-              or(
-                subscribers.name ? like(subscribers.name, `%${searchTerm}%`) : undefined, 
-                like(subscribers.email, `%${searchTerm}%`)
-              ) : undefined
-        ),
-        orderBy: [desc(subscribers.dateAdded)],
-        with: {
-            subscriberSegments: {
-                with: {
-                    segment: {
-                        columns: { id: true, name: true }
-                    }
-                }
-            }
-        }
-    });
+    const offset = (page - 1) * limit;
+    
+    // Build where conditions
+    const whereConditions = [eq(subscribers.userId, userId)];
+    
+    if (searchTerm) {
+      whereConditions.push(
+        or(
+          subscribers.name ? like(subscribers.name, `%${searchTerm}%`) : undefined,
+          like(subscribers.email, `%${searchTerm}%`)
+        ) as any
+      );
+    }
+    
+    if (statusFilter && statusFilter !== 'all') {
+      whereConditions.push(eq(subscribers.status, statusFilter as any));
+    }
 
-    return userSubscribers.map(sub => ({
-        ...sub,
-        segments: sub.subscriberSegments.map(ss => ss.segment)
+    const [userSubscribers, totalCount] = await Promise.all([
+      db.query.subscribers.findMany({
+        where: and(...whereConditions),
+        orderBy: [desc(subscribers.dateAdded)],
+        limit,
+        offset,
+        with: {
+          subscriberSegments: {
+            with: {
+              segment: {
+                columns: { id: true, name: true }
+              }
+            }
+          }
+        }
+      }),
+      db.select({ count: sql<number>`count(*)` }).from(subscribers).where(and(...whereConditions))
+    ]);
+
+    const subscribersWithSegments = userSubscribers.map(sub => ({
+      ...sub,
+      segments: sub.subscriberSegments.map(ss => ss.segment)
     }));
+
+    return {
+      subscribers: subscribersWithSegments,
+      totalCount: totalCount[0]?.count || 0,
+      totalPages: Math.ceil((totalCount[0]?.count || 0) / limit),
+      currentPage: page,
+      hasNextPage: page < Math.ceil((totalCount[0]?.count || 0) / limit),
+      hasPrevPage: page > 1
+    };
 
   } catch (error) {
     console.error('Failed to fetch subscribers:', error);
-    return [];
+    return {
+      subscribers: [],
+      totalCount: 0,
+      totalPages: 0,
+      currentPage: 1,
+      hasNextPage: false,
+      hasPrevPage: false
+    };
   }
 }
 
@@ -162,6 +194,38 @@ export async function deleteSubscriber(id: string) {
   }
 }
 
+export async function bulkDeleteSubscribers(subscriberIds: string[]) {
+  const { userId } = await auth();
+  if (!userId) return { success: false, message: 'Not authenticated' };
+
+  if (!subscriberIds || subscriberIds.length === 0) {
+    return { success: false, message: 'No subscribers selected for deletion.' };
+  }
+
+  try {
+    // Delete segment associations first
+    await db.delete(subscriberSegments).where(inArray(subscriberSegments.subscriberId, subscriberIds));
+    
+    // Delete subscribers (only those belonging to the user)
+    const result = await db.delete(subscribers).where(
+      and(
+        inArray(subscribers.id, subscriberIds),
+        eq(subscribers.userId, userId)
+      )
+    );
+
+    revalidatePath('/subscribers');
+    return { 
+      success: true, 
+      message: `Successfully deleted ${subscriberIds.length} subscriber(s).`,
+      deletedCount: subscriberIds.length
+    };
+  } catch (error) {
+    console.error('Failed to bulk delete subscribers:', error);
+    return { success: false, message: 'Failed to delete subscribers.' };
+  }
+}
+
 const segmentSchema = z.object({
   name: z.string().min(1, { message: 'Segment name is required.' }).max(255),
   description: z.string().optional(),
@@ -230,6 +294,17 @@ export async function bulkAddSubscribers(
 
   if (!subscribersToImport || subscribersToImport.length === 0) {
     return { success: true, message: 'No subscribers to import.', addedCount: 0, updatedCount: 0, failedCount: 0 };
+  }
+
+  // Validate chunk size - reject overly large chunks
+  if (subscribersToImport.length > 500) {
+    return { 
+      success: false, 
+      message: `Chunk too large (${subscribersToImport.length} subscribers). Please use smaller chunks (max 500).`,
+      addedCount: 0, 
+      updatedCount: 0, 
+      failedCount: subscribersToImport.length 
+    };
   }
   
   const segmentIdsToApply = rawSegmentIdsToApply || [];
@@ -328,8 +403,17 @@ export async function bulkAddSubscribers(
   } catch (error: unknown) {
     console.error('Failed to bulk add subscribers:', error);
     let errorMessage = 'Unknown database error';
+    
     if (error instanceof Error) {
       errorMessage = error.message;
+      // Check for specific database errors
+      if (error.message.includes('timeout')) {
+        errorMessage = 'Database operation timed out. Try importing smaller batches.';
+      } else if (error.message.includes('connection')) {
+        errorMessage = 'Database connection error. Please try again.';
+      } else if (error.message.includes('constraint')) {
+        errorMessage = 'Data constraint violation. Check for duplicate emails or invalid data.';
+      }
     } else if (typeof error === 'string') {
       errorMessage = error;
     }
@@ -339,10 +423,10 @@ export async function bulkAddSubscribers(
     failedImports.push({rowIndex: -1, error: finalErrorMessage}); // Use -1 for general DB error
     return { 
       success: false, 
-      message: 'An error occurred during the import process. Some subscribers may not have been imported.', 
+      message: finalErrorMessage, 
       addedCount, 
       updatedCount, 
-      failedCount: validSubscribersForDb.length - addedCount - updatedCount + (subscribersToImport.length - validSubscribersForDb.length - failedImports.filter(e=>e.rowIndex !== -1).length),
+      failedCount: subscribersToImport.length,
       errors: failedImports
     };
   }
@@ -397,5 +481,37 @@ export async function getSubscribersBySegments(segmentIds?: string[]) {
   } catch (error) {
     console.error('Failed to fetch subscribers by segments:', error);
     throw new Error('Failed to fetch subscribers');
+  }
+}
+
+export async function getAllSubscriberIds(searchTerm?: string, statusFilter?: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error('Not authenticated');
+
+  try {
+    // Build where conditions (same as pagination query)
+    const whereConditions = [eq(subscribers.userId, userId)];
+    
+    if (searchTerm) {
+      whereConditions.push(
+        or(
+          subscribers.name ? like(subscribers.name, `%${searchTerm}%`) : undefined,
+          like(subscribers.email, `%${searchTerm}%`)
+        ) as any
+      );
+    }
+    
+    if (statusFilter && statusFilter !== 'all') {
+      whereConditions.push(eq(subscribers.status, statusFilter as any));
+    }
+
+    const allSubscriberIds = await db.select({ id: subscribers.id })
+      .from(subscribers)
+      .where(and(...whereConditions));
+
+    return allSubscriberIds.map(sub => sub.id);
+  } catch (error) {
+    console.error('Failed to fetch all subscriber IDs:', error);
+    return [];
   }
 }

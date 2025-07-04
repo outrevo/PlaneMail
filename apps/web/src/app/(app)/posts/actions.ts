@@ -439,7 +439,7 @@ export async function getPostById(postId: string): Promise<PostWithSegments | nu
 
 export async function sendPostAsEmail(formDataObj: FormData) {
   const { userId } = await auth();
-  if (!userId) return { success: false, message: 'Not authenticated', errors: null };
+  if (!userId) return { success: false, message: 'Not authenticated', errors: null, jobId: null };
 
   const segmentIdsString = formDataObj.get('segmentIds') as string;
   const segmentIds = segmentIdsString ? segmentIdsString.split(',').filter(id => id !== 'all') : [];
@@ -457,7 +457,8 @@ export async function sendPostAsEmail(formDataObj: FormData) {
     return { 
       success: false, 
       message: 'Validation failed', 
-      errors: validatedFields.error.flatten().fieldErrors 
+      errors: validatedFields.error.flatten().fieldErrors,
+      jobId: null
     };
   }
 
@@ -470,7 +471,8 @@ export async function sendPostAsEmail(formDataObj: FormData) {
       return { 
         success: false, 
         message: 'Post not found', 
-        errors: null 
+        errors: null,
+        jobId: null
       };
     }
 
@@ -515,7 +517,8 @@ export async function sendPostAsEmail(formDataObj: FormData) {
       return { 
         success: false, 
         message: 'No active subscribers found in the selected segments', 
-        errors: null 
+        errors: null,
+        jobId: null
       };
     }
 
@@ -552,7 +555,8 @@ export async function sendPostAsEmail(formDataObj: FormData) {
       return { 
         success: false, 
         message: jobResult.message || 'Failed to queue email job', 
-        errors: null 
+        errors: null,
+        jobId: null
       };
     }
 
@@ -561,14 +565,16 @@ export async function sendPostAsEmail(formDataObj: FormData) {
     return { 
       success: true, 
       message: 'Post email queued successfully', 
-      errors: null 
+      errors: null,
+      jobId: jobResult.jobId
     };
   } catch (error) {
     console.error('Failed to send post as email:', error);
     return { 
       success: false, 
       message: 'Failed to send email. Please try again.', 
-      errors: null 
+      errors: null,
+      jobId: null
     };
   }
 }
