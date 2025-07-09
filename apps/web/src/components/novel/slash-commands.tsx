@@ -24,7 +24,9 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify
+  AlignJustify,
+  Type as FontIcon,
+  Heading
 } from 'lucide-react';
 
 export interface SuggestionItem {
@@ -326,6 +328,30 @@ export const defaultSlashCommands: SuggestionItem[] = [
     icon: AlignJustify,
     command: ({ editor, range }: any) => {
       editor.chain().focus().deleteRange(range).setTextAlign('justify').run();
+    },
+  },
+  {
+    title: 'Font Sans',
+    description: 'Change to sans-serif font',
+    icon: FontIcon,
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).setFontFamily('Inter, sans-serif').run();
+    },
+  },
+  {
+    title: 'Font Serif',
+    description: 'Change to serif font',
+    icon: Heading,
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).setFontFamily('Georgia, serif').run();
+    },
+  },
+  {
+    title: 'Font Mono',
+    description: 'Change to monospace font',
+    icon: Code,
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).setFontFamily('Monaco, Consolas, monospace').run();
     },
   },
 ];

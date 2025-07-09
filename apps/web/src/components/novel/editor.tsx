@@ -12,6 +12,7 @@ import { Color } from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import FontFamily from '@tiptap/extension-font-family';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
@@ -21,6 +22,12 @@ import Gapcursor from '@tiptap/extension-gapcursor';
 import { useDebouncedCallback } from 'use-debounce';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
   Bold, 
   Italic, 
@@ -43,7 +50,9 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  AlignJustify
+  AlignJustify,
+  Type as FontIcon,
+  ChevronDown
 } from 'lucide-react';
 import { Provider } from 'jotai';
 import tunnel from 'tunnel-rat';
@@ -111,15 +120,94 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         duration: 100,
         onShow: () => setIsOpen(true),
         onHide: () => setIsOpen(false),
+        placement: 'top',
+        maxWidth: 'none',
       }}
-      className="bg-background border border-border rounded-lg shadow-lg p-1 flex items-center gap-0.5"
+      className="bubble-menu-glass"
     >
-      {/* Text Formatting */}
+      {/* Font Family */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="font-dropdown-button text-xs font-medium gap-1"
+          >
+            <FontIcon className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline max-w-16 truncate">
+              {editor.getAttributes('textStyle').fontFamily?.split(',')[0] || 'Font'}
+            </span>
+            <ChevronDown className="h-3 w-3 flex-shrink-0" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent 
+          align="start" 
+          side="bottom"
+          className="dropdown-glass"
+          sideOffset={8}
+          alignOffset={-20}
+          avoidCollisions={true}
+          collisionPadding={20}
+        >
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setFontFamily('Inter, sans-serif').run()}
+            className="font-sans"
+          >
+            Inter (Default)
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setFontFamily('serif').run()}
+            className="font-serif"
+          >
+            Serif
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setFontFamily('Georgia, serif').run()}
+            style={{ fontFamily: 'Georgia, serif' }}
+          >
+            Georgia
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setFontFamily('Times New Roman, serif').run()}
+            style={{ fontFamily: 'Times New Roman, serif' }}
+          >
+            Times New Roman
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setFontFamily('Helvetica, sans-serif').run()}
+            style={{ fontFamily: 'Helvetica, sans-serif' }}
+          >
+            Helvetica
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setFontFamily('Arial, sans-serif').run()}
+            style={{ fontFamily: 'Arial, sans-serif' }}
+          >
+            Arial
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().setFontFamily('Monaco, Consolas, monospace').run()}
+            className="font-mono"
+          >
+            Monospace
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => editor.chain().focus().unsetFontFamily().run()}
+          >
+            Reset
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      {/* Core Formatting */}
       <Button
         size="sm"
         variant={editor.isActive('bold') ? 'default' : 'ghost'}
         onClick={toggleBold}
         className="h-8 w-8 p-0"
+        title="Bold"
       >
         <Bold className="h-4 w-4" />
       </Button>
@@ -129,6 +217,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         variant={editor.isActive('italic') ? 'default' : 'ghost'}
         onClick={toggleItalic}
         className="h-8 w-8 p-0"
+        title="Italic"
       >
         <Italic className="h-4 w-4" />
       </Button>
@@ -138,6 +227,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         variant={editor.isActive('underline') ? 'default' : 'ghost'}
         onClick={toggleUnderline}
         className="h-8 w-8 p-0"
+        title="Underline"
       >
         <UnderlineIcon className="h-4 w-4" />
       </Button>
@@ -147,28 +237,9 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         variant={editor.isActive('strike') ? 'default' : 'ghost'}
         onClick={toggleStrike}
         className="h-8 w-8 p-0"
+        title="Strikethrough"
       >
         <Strikethrough className="h-4 w-4" />
-      </Button>
-
-      <Button
-        size="sm"
-        variant={editor.isActive('code') ? 'default' : 'ghost'}
-        onClick={toggleCode}
-        className="h-8 w-8 p-0"
-      >
-        <Code className="h-4 w-4" />
-      </Button>
-
-      <Separator orientation="vertical" className="mx-1 h-6" />
-
-      <Button
-        size="sm"
-        variant={editor.isActive('highlight') ? 'default' : 'ghost'}
-        onClick={toggleHighlight}
-        className="h-8 w-8 p-0"
-      >
-        <Highlighter className="h-4 w-4" />
       </Button>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
@@ -179,6 +250,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'ghost'}
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         className="h-8 w-8 p-0"
+        title="Heading 1"
       >
         <Heading1 className="h-4 w-4" />
       </Button>
@@ -188,6 +260,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'ghost'}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         className="h-8 w-8 p-0"
+        title="Heading 2"
       >
         <Heading2 className="h-4 w-4" />
       </Button>
@@ -197,6 +270,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         variant={editor.isActive('heading', { level: 3 }) ? 'default' : 'ghost'}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         className="h-8 w-8 p-0"
+        title="Heading 3"
       >
         <Heading3 className="h-4 w-4" />
       </Button>
@@ -209,6 +283,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className="h-8 w-8 p-0"
+        title="Bullet List"
       >
         <List className="h-4 w-4" />
       </Button>
@@ -218,13 +293,14 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         className="h-8 w-8 p-0"
+        title="Numbered List"
       >
         <ListOrdered className="h-4 w-4" />
       </Button>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      {/* Text Alignment */}
+      {/* Alignment */}
       <Button
         size="sm"
         variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
@@ -240,7 +316,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
         onClick={setAlignCenter}
         className="h-8 w-8 p-0"
-        title="Align Center"
+        title="Center"
       >
         <AlignCenter className="h-4 w-4" />
       </Button>
@@ -255,14 +331,27 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         <AlignRight className="h-4 w-4" />
       </Button>
 
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      {/* Additional Tools */}
       <Button
         size="sm"
-        variant={editor.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
-        onClick={setAlignJustify}
+        variant={editor.isActive('highlight') ? 'default' : 'ghost'}
+        onClick={toggleHighlight}
         className="h-8 w-8 p-0"
-        title="Justify"
+        title="Highlight"
       >
-        <AlignJustify className="h-4 w-4" />
+        <Highlighter className="h-4 w-4" />
+      </Button>
+
+      <Button
+        size="sm"
+        variant={editor.isActive('code') ? 'default' : 'ghost'}
+        onClick={toggleCode}
+        className="h-8 w-8 p-0"
+        title="Inline Code"
+      >
+        <Code className="h-4 w-4" />
       </Button>
 
       <Separator orientation="vertical" className="mx-1 h-6" />
@@ -278,8 +367,6 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
         <ImageIcon className="h-4 w-4" />
       </Button>
 
-      <Separator orientation="vertical" className="mx-1 h-6" />
-
       {/* Link */}
       {editor.isActive('link') ? (
         <Button
@@ -287,6 +374,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
           variant="default"
           onClick={unsetLink}
           className="h-8 w-8 p-0"
+          title="Remove Link"
         >
           <Unlink className="h-4 w-4" />
         </Button>
@@ -296,6 +384,7 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
           variant="ghost"
           onClick={setLink}
           className="h-8 w-8 p-0"
+          title="Add Link"
         >
           <LinkIcon className="h-4 w-4" />
         </Button>
@@ -408,6 +497,9 @@ export function NovelEditor({
       types: ['heading', 'paragraph'],
       alignments: ['left', 'center', 'right', 'justify'],
       defaultAlignment: 'left',
+    }),
+    FontFamily.configure({
+      types: ['textStyle'],
     }),
     TextStyle,
     Color,
