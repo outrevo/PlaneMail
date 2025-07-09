@@ -20,7 +20,11 @@ import {
   Table,
   Calendar,
   FileText,
-  Images
+  Images,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify
 } from 'lucide-react';
 
 export interface SuggestionItem {
@@ -290,6 +294,38 @@ export const defaultSlashCommands: SuggestionItem[] = [
         attrs: { class: 'callout' },
         content: [{ type: 'text', text: '💡 ' }]
       }).run();
+    },
+  },
+  {
+    title: 'Align Left',
+    description: 'Align text to the left',
+    icon: AlignLeft,
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).setTextAlign('left').run();
+    },
+  },
+  {
+    title: 'Align Center',
+    description: 'Center align text',
+    icon: AlignCenter,
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).setTextAlign('center').run();
+    },
+  },
+  {
+    title: 'Align Right',
+    description: 'Align text to the right',
+    icon: AlignRight,
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).setTextAlign('right').run();
+    },
+  },
+  {
+    title: 'Align Justify',
+    description: 'Justify text alignment',
+    icon: AlignJustify,
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).setTextAlign('justify').run();
     },
   },
 ];

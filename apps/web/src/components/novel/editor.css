@@ -7,7 +7,7 @@
 .ProseMirror .is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: rgb(156, 163, 175);
+  color: hsl(var(--muted-foreground));
   pointer-events: none;
   height: 0;
 }
@@ -22,15 +22,10 @@
 }
 
 .ProseMirror > *:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: hsl(var(--muted) / 0.3);
   padding-left: 8px;
   margin-left: -8px;
-  border-left: 3px solid #e5e7eb;
-}
-
-.dark .ProseMirror > *:hover {
-  background-color: rgba(255, 255, 255, 0.02);
-  border-left-color: #374151;
+  border-left: 3px solid hsl(var(--border));
 }
 
 /* Paragraph specific styles */
@@ -41,7 +36,7 @@
 
 .ProseMirror p.is-empty::before {
   content: "Type '/' for commands or start writing...";
-  color: #9ca3af;
+  color: hsl(var(--muted-foreground));
   pointer-events: none;
   float: left;
   height: 0;
@@ -83,19 +78,15 @@
 
 /* Slash command menu styles */
 .slash-command-menu {
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px hsl(var(--foreground) / 0.1), 0 4px 6px -2px hsl(var(--foreground) / 0.05);
   padding: 4px;
   max-height: 320px;
   overflow-y: auto;
   z-index: 50;
-}
-
-.dark .slash-command-menu {
-  background: #1f2937;
-  border-color: #374151;
+  color: hsl(var(--popover-foreground));
 }
 
 .slash-command-item {
@@ -113,12 +104,8 @@
 
 .slash-command-item:hover,
 .slash-command-item.selected {
-  background-color: #f3f4f6;
-}
-
-.dark .slash-command-item:hover,
-.dark .slash-command-item.selected {
-  background-color: #374151;
+  background-color: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
 }
 
 .slash-command-icon {
@@ -127,15 +114,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid hsl(var(--border));
   border-radius: 4px;
   margin-right: 12px;
-  background-color: #ffffff;
-}
-
-.dark .slash-command-icon {
-  border-color: #4b5563;
-  background-color: #111827;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
 /* Task list custom styles */
@@ -167,8 +150,9 @@
 
 /* Code block styles */
 .ProseMirror pre {
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background-color: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
   border-radius: 8px;
   padding: 16px;
   font-family: 'Monaco', 'Consolas', 'Ubuntu Mono', monospace;
@@ -178,61 +162,37 @@
   margin: 16px 0;
 }
 
-.dark .ProseMirror pre {
-  background-color: #1e1e1e;
-  border-color: #333;
-  color: #d4d4d4;
-}
-
 /* Inline code styles */
 .ProseMirror code {
-  background-color: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background-color: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
   border-radius: 4px;
   padding: 2px 4px;
   font-family: 'Monaco', 'Consolas', 'Ubuntu Mono', monospace;
   font-size: 0.9em;
 }
 
-.dark .ProseMirror code {
-  background-color: #374151;
-  border-color: #4b5563;
-  color: #e5e7eb;
-}
-
 /* Blockquote styles */
 .ProseMirror blockquote {
-  border-left: 4px solid #e5e7eb;
+  border-left: 4px solid hsl(var(--border));
   padding-left: 16px;
   margin: 16px 0;
   font-style: italic;
-  color: #6b7280;
-}
-
-.dark .ProseMirror blockquote {
-  border-left-color: #4b5563;
-  color: #9ca3af;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Horizontal rule styles */
 .ProseMirror hr {
   border: none;
-  border-top: 2px solid #e5e7eb;
+  border-top: 2px solid hsl(var(--border));
   margin: 24px 0;
   border-radius: 1px;
 }
 
-.dark .ProseMirror hr {
-  border-top-color: #374151;
-}
-
 /* Selection styles */
 .ProseMirror ::selection {
-  background-color: #dbeafe;
-}
-
-.dark .ProseMirror ::selection {
-  background-color: #1e40af;
+  background-color: hsl(var(--accent) / 0.3);
 }
 
 /* Focus styles */
@@ -242,14 +202,14 @@
 
 /* Drag and drop feedback */
 .ProseMirror.drag-over {
-  background-color: rgba(59, 130, 246, 0.1);
-  border: 2px dashed #3b82f6;
+  background-color: hsl(var(--primary) / 0.1);
+  border: 2px dashed hsl(var(--primary));
   border-radius: 8px;
 }
 
 /* Link styles */
 .ProseMirror a {
-  color: #2563eb;
+  color: hsl(var(--primary));
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
@@ -257,13 +217,5 @@
 }
 
 .ProseMirror a:hover {
-  color: #1d4ed8;
-}
-
-.dark .ProseMirror a {
-  color: #60a5fa;
-}
-
-.dark .ProseMirror a:hover {
-  color: #93c5fd;
+  color: hsl(var(--primary) / 0.8);
 }

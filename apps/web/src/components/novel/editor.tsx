@@ -11,6 +11,7 @@ import TextStyle from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import HorizontalRule from '@tiptap/extension-horizontal-rule';
@@ -38,7 +39,11 @@ import {
   ListOrdered,
   Quote,
   Code2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify
 } from 'lucide-react';
 import { Provider } from 'jotai';
 import tunnel from 'tunnel-rat';
@@ -71,6 +76,11 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
   const toggleStrike = () => editor.chain().focus().toggleStrike().run();
   const toggleCode = () => editor.chain().focus().toggleCode().run();
   const toggleHighlight = () => editor.chain().focus().toggleHighlight().run();
+
+  const setAlignLeft = () => editor.chain().focus().setTextAlign('left').run();
+  const setAlignCenter = () => editor.chain().focus().setTextAlign('center').run();
+  const setAlignRight = () => editor.chain().focus().setTextAlign('right').run();
+  const setAlignJustify = () => editor.chain().focus().setTextAlign('justify').run();
 
   const setLink = () => {
     const previousUrl = editor.getAttributes('link').href;
@@ -214,6 +224,49 @@ const EditorBubbleMenu = ({ editor }: { editor: Editor }) => {
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
+      {/* Text Alignment */}
+      <Button
+        size="sm"
+        variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
+        onClick={setAlignLeft}
+        className="h-8 w-8 p-0"
+        title="Align Left"
+      >
+        <AlignLeft className="h-4 w-4" />
+      </Button>
+
+      <Button
+        size="sm"
+        variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
+        onClick={setAlignCenter}
+        className="h-8 w-8 p-0"
+        title="Align Center"
+      >
+        <AlignCenter className="h-4 w-4" />
+      </Button>
+
+      <Button
+        size="sm"
+        variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
+        onClick={setAlignRight}
+        className="h-8 w-8 p-0"
+        title="Align Right"
+      >
+        <AlignRight className="h-4 w-4" />
+      </Button>
+
+      <Button
+        size="sm"
+        variant={editor.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
+        onClick={setAlignJustify}
+        className="h-8 w-8 p-0"
+        title="Justify"
+      >
+        <AlignJustify className="h-4 w-4" />
+      </Button>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
       {/* Image */}
       <Button
         size="sm"
@@ -351,12 +404,17 @@ export function NovelEditor({
       uploadFunction: handleImageKitUpload,
       onOpenLibrary: handleOpenImageLibrary,
     }),
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+      alignments: ['left', 'center', 'right', 'justify'],
+      defaultAlignment: 'left',
+    }),
     TextStyle,
     Color,
     Highlight.configure({ 
       multicolor: true,
       HTMLAttributes: {
-        class: 'rounded-sm bg-yellow-200 dark:bg-yellow-800 px-1 py-0.5',
+        class: 'rounded-sm bg-accent/20 px-1 py-0.5',
       },
     }),
     Underline,

@@ -100,7 +100,7 @@ export default function PostsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [activeTab, setActiveTab] = useState('posts');
+  const [activeTab, setActiveTab] = useState('all');
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [showCreateFlow, setShowCreateFlow] = useState(false);
 
@@ -352,7 +352,7 @@ export default function PostsPage() {
             description: 'Post published successfully!',
           });
           resetWorkflow();
-          setActiveTab('posts');
+          setActiveTab('all');
           // Refresh posts list
           const updatedPosts = await getUserPosts();
           setUserPosts(updatedPosts);
@@ -468,12 +468,20 @@ export default function PostsPage() {
     }
   }, [workflowData.title, workflowData.content, showCreateFlow, debouncedAutoSave]);
 
-  // Pagination logic
-  const publishedPosts = userPosts.filter(post => 
-    post.status === 'published' || post.status === 'sent' || post.webEnabled
-  );
-  const totalPages = Math.ceil(publishedPosts.length / postsPerPage);
-  const paginatedPosts = publishedPosts.slice(
+  // Filter posts based on active tab
+  const filteredPosts = userPosts.filter(post => {
+    if (activeTab === 'drafts') {
+      return post.status === 'draft';
+    } else if (activeTab === 'published') {
+      return post.status === 'published' || post.status === 'sent' || post.webEnabled;
+    } else {
+      // 'all' tab shows everything
+      return true;
+    }
+  });
+  
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const paginatedPosts = filteredPosts.slice(
     (currentPage - 1) * postsPerPage,
     currentPage * postsPerPage
   );
@@ -535,7 +543,14 @@ export default function PostsPage() {
         />
       ) : (
         /* Posts List View */
-        <div className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 max-w-md">
+            <TabsTrigger value="all">All Posts</TabsTrigger>
+            <TabsTrigger value="drafts">Drafts</TabsTrigger>
+            <TabsTrigger value="published">Published</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value={activeTab} className="space-y-6">
           {isLoading ? (
             <div className="flex items-center justify-center min-h-[400px]">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -545,9 +560,21 @@ export default function PostsPage() {
               <CardContent className="pt-6">
                 <div className="text-center py-12">
                   <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No published posts yet</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    {activeTab === 'drafts' 
+                      ? 'No draft posts yet' 
+                      : activeTab === 'published' 
+                        ? 'No published posts yet'
+                        : 'No posts yet'
+                    }
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    Create your first post to get started
+                    {activeTab === 'drafts' 
+                      ? 'Create a post and save it as a draft to see it here'
+                      : activeTab === 'published'
+                        ? 'Publish a post to see it here'
+                        : 'Create your first post to get started'
+                    }
                   </p>
                   <Button onClick={() => { resetWorkflow(); setShowCreateFlow(true); }}>
                     <PlusCircle className="h-4 w-4 mr-2" />
@@ -689,7 +716,8 @@ export default function PostsPage() {
               )}
             </>
           )}
-        </div>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
