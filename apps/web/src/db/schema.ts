@@ -19,6 +19,7 @@ export const appUsers = pgTable('app_users', {
 export const userIntegrations = pgTable('user_integrations', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => appUsers.clerkUserId, { onDelete: 'cascade' }),
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }), // Clerk organization ID for team integrations
   provider: varchar('provider', { length: 50 }).notNull(), 
   apiKey: text('api_key'), // For Brevo, Mailgun API Key, AWS Access Key ID
   secretApiKey: text('secret_api_key'), // For AWS Secret Access Key
@@ -36,6 +37,7 @@ export const userIntegrations = pgTable('user_integrations', {
 export const apiKeys = pgTable('api_keys', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => appUsers.clerkUserId, { onDelete: 'cascade' }),
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }), // Clerk organization ID for team API keys
   name: varchar('name', { length: 100 }).notNull(),
   prefix: varchar('prefix', { length: 12 }).notNull().unique(), 
   hashedKey: text('hashed_key').notNull(), 
@@ -47,6 +49,7 @@ export const apiKeys = pgTable('api_keys', {
 export const webhooks = pgTable('webhooks', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => appUsers.clerkUserId, { onDelete: 'cascade' }),
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }), // Clerk organization ID for team webhooks
   url: text('url').notNull(),
   events: jsonb('events').notNull(), // Array of event types
   description: varchar('description', { length: 255 }),
@@ -62,6 +65,7 @@ export const webhooks = pgTable('webhooks', {
 export const posts = pgTable('posts', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: varchar('user_id', { length: 255 }).notNull(),
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }), // Clerk organization ID for team posts
   
   // Basic post information
   title: varchar('title', { length: 255 }).notNull(),
@@ -109,6 +113,7 @@ export const posts = pgTable('posts', {
 export const subscribers = pgTable('subscribers', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: varchar('user_id', { length: 255 }).notNull(), 
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }), // Clerk organization ID for team subscribers
   email: varchar('email', { length: 255 }).notNull(),
   name: varchar('name', { length: 255 }),
   status: varchar('status', { length: 50 }).default('active').notNull(), 
@@ -124,6 +129,7 @@ export const subscribers = pgTable('subscribers', {
 export const segments = pgTable('segments', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: varchar('user_id', { length: 255 }).notNull(), 
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }), // Clerk organization ID for team segments
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -203,6 +209,7 @@ export const publicSiteSettings = pgTable('public_site_settings', {
 export const customDomains = pgTable('custom_domains', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => appUsers.clerkUserId, { onDelete: 'cascade' }),
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }), // Clerk organization ID for team domains
   domain: varchar('domain', { length: 255 }).notNull().unique(),
   status: varchar('status', { length: 50 }).notNull().default('pending'), // pending, verified, active, failed
   verificationToken: varchar('verification_token', { length: 100 }),
@@ -218,6 +225,7 @@ export const customDomains = pgTable('custom_domains', {
 export const images = pgTable('images', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: varchar('user_id', { length: 255 }).notNull().references(() => appUsers.clerkUserId, { onDelete: 'cascade' }),
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }), // Clerk organization ID for team images
   
   // File information
   filename: varchar('filename', { length: 255 }).notNull(),
@@ -243,6 +251,96 @@ export const images = pgTable('images', {
   isDeleted: boolean('is_deleted').default(false),
   lastUsedAt: timestamp('last_used_at'),
   usageCount: integer('usage_count').default(0),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+});
+
+// Pricing plans for team billing
+export const pricingPlans = pgTable('pricing_plans', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(),
+  description: text('description'),
+  price: integer('price').notNull().default(0), // Price in cents
+  billingInterval: varchar('billing_interval', { length: 20 }).notNull().default('monthly'), // monthly, yearly
+  
+  // Limits
+  maxSubscribers: integer('max_subscribers').default(1000),
+  maxPostsPerMonth: integer('max_posts_per_month').default(10),
+  maxCustomDomains: integer('max_custom_domains').default(0),
+  maxTeamMembers: integer('max_team_members').default(1), // 1 = personal only, >1 = team allowed
+  maxIntegrations: integer('max_integrations').default(1),
+  maxApiKeys: integer('max_api_keys').default(2),
+  maxWebhooks: integer('max_webhooks').default(2),
+  maxImageUploads: integer('max_image_uploads').default(50), // per month
+  maxEmailsPerMonth: integer('max_emails_per_month').default(10000),
+  
+  // Organization/Team features (only on paid plans)
+  allowOrganizations: boolean('allow_organizations').default(false),
+  allowAdvancedAnalytics: boolean('allow_advanced_analytics').default(false),
+  allowCustomDomains: boolean('allow_custom_domains').default(false),
+  allowApiAccess: boolean('allow_api_access').default(false),
+  
+  // Features
+  features: jsonb('features'), // Array of feature flags
+  
+  // Paddle integration
+  paddleProductId: text('paddle_product_id'),
+  paddlePriceId: text('paddle_price_id'),
+  
+  isActive: boolean('is_active').default(true),
+  isDefault: boolean('is_default').default(false), // Default plan for new personal accounts
+  sortOrder: integer('sort_order').default(0),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+});
+
+// Organization subscriptions (works with Clerk organizations)
+export const organizationSubscriptions = pgTable('organization_subscriptions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }).notNull().unique(), // Clerk organization ID
+  planId: uuid('plan_id').notNull().references(() => pricingPlans.id),
+  
+  // Paddle integration
+  paddleSubscriptionId: text('paddle_subscription_id').unique(),
+  paddleCustomerId: text('paddle_customer_id'),
+  
+  status: varchar('status', { length: 50 }).notNull().default('active'), // active, canceled, past_due, trialing
+  currentPeriodStart: timestamp('current_period_start'),
+  currentPeriodEnd: timestamp('current_period_end'),
+  trialStart: timestamp('trial_start'),
+  trialEnd: timestamp('trial_end'),
+  canceledAt: timestamp('canceled_at'),
+  cancelAtPeriodEnd: boolean('cancel_at_period_end').default(false),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+});
+
+// Organization usage tracking
+export const organizationUsage = pgTable('organization_usage', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }).notNull().unique(), // Clerk organization ID
+  
+  // Current usage counters
+  currentSubscribers: integer('current_subscribers').default(0),
+  currentPostsThisMonth: integer('current_posts_this_month').default(0),
+  currentCustomDomains: integer('current_custom_domains').default(0),
+  currentTeamMembers: integer('current_team_members').default(0),
+  currentIntegrations: integer('current_integrations').default(0),
+  currentApiKeys: integer('current_api_keys').default(0),
+  currentWebhooks: integer('current_webhooks').default(0),
+  currentImageUploadsThisMonth: integer('current_image_uploads_this_month').default(0),
+  currentEmailsThisMonth: integer('current_emails_this_month').default(0),
+  
+  // Usage period (monthly reset)
+  usagePeriodStart: timestamp('usage_period_start').defaultNow().notNull(),
+  usagePeriodEnd: timestamp('usage_period_end').notNull(),
+  
+  // Tracking
+  lastResetAt: timestamp('last_reset_at'),
   
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
@@ -358,5 +456,16 @@ export const imagesRelations = relations(images, ({ one }) => ({
   user: one(appUsers, {
     fields: [images.userId],
     references: [appUsers.clerkUserId],
+  }),
+}));
+
+export const pricingPlansRelations = relations(pricingPlans, ({ many }) => ({
+  subscriptions: many(organizationSubscriptions),
+}));
+
+export const organizationSubscriptionsRelations = relations(organizationSubscriptions, ({ one }) => ({
+  plan: one(pricingPlans, {
+    fields: [organizationSubscriptions.planId],
+    references: [pricingPlans.id],
   }),
 }));

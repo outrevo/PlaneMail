@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, CreditCard, ExternalLink, ShieldCheck, Zap, ArrowRight, Github, Sparkles } from 'lucide-react';
@@ -152,6 +151,67 @@ export default async function BillingPage() {
         </div>
       )}
       
+      {/* Organization Features Status */}
+      {subscriptionData && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <ShieldCheck className="h-5 w-5" />
+              <span>Organization Features</span>
+            </CardTitle>
+            <CardDescription>
+              Collaboration and team features available with your plan
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Create Organizations</p>
+                  <p className="text-sm text-muted-foreground">
+                    {subscriptionData.canCreateOrganizations 
+                      ? 'You can create an organization to collaborate with your team' 
+                      : 'Upgrade to create organizations and invite team members'
+                    }
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {subscriptionData.canCreateOrganizations ? (
+                    <div className="flex items-center space-x-2 text-green-600">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span className="text-sm font-medium">Available</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2 text-yellow-600">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Upgrade Required</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {!subscriptionData.canCreateOrganizations && (
+                <div className="pt-4 border-t">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Organization features include:
+                  </p>
+                  <ul className="text-sm text-muted-foreground space-y-1 mb-4">
+                    <li>• Team collaboration and member management</li>
+                    <li>• Shared newsletters and subscriber lists</li>
+                    <li>• Role-based permissions</li>
+                    <li>• Organization-level analytics</li>
+                  </ul>
+                  <Button size="sm">
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    View Plans
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Open Source Info */}
       <div className="border border rounded-2xl bg-muted/50 shadow-sm">
         <div className="p-6">

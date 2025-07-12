@@ -3,8 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { BarChart, LineChart, Users, Mail, PieChart, Activity, Plus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getDashboardStats, getRecentActivityItems, type DashboardStats, type ActivityItem } from './actions';
+import { NewOrgNotification } from '@/components/organization/NewOrgNotification';
 
-export default async function DashboardPage() {
+interface DashboardPageProps {
+  searchParams: Promise<{ newOrg?: string }>;
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const params = await searchParams;
   const statsData: DashboardStats = await getDashboardStats();
   const recentActivities: ActivityItem[] = await getRecentActivityItems();
 
@@ -17,6 +23,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
+      {/* New Organization Notification */}
+      <NewOrgNotification />
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="space-y-1">

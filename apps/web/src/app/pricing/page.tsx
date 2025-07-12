@@ -1,54 +1,79 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Github, Slack, ArrowRight, Sparkles } from 'lucide-react';
+import { CheckCircle, Github, Slack, ArrowRight, Sparkles, Crown, Users } from 'lucide-react';
 import { Logo } from '@/components/icons/Logo';
 import { PricingButton } from '@/components/pricing/PricingButton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Pricing | PlaneMail - Open Source Newsletter Platform',
-  description: 'Simple, transparent pricing for the open-source newsletter platform. 14-day free trial. Use your own email provider. No vendor lock-in.',
+  description: 'Simple, transparent pricing for the open-source newsletter platform. Organizations and team features available on Pro plans.',
 };
 
 const pricingPlans = [
   {
-    name: 'Hosted',
+    name: 'Personal',
+    price: 'Free',
+    frequency: 'forever',
+    description: 'Perfect for personal projects.',
+    features: [
+      '1,000 subscribers',
+      '10 posts per month',
+      'Basic templates',
+      'Email support',
+      'Your own email provider',
+      'Web publishing',
+      'Basic analytics',
+      'Community support',
+    ],
+    cta: 'Get Started',
+    priceId: 'personal',
+    isPopular: false,
+    hasTrial: false,
+  },
+  {
+    name: 'Pro',
     price: '$19',
     frequency: '/month',
-    description: 'We handle the infrastructure.',
+    description: 'For professionals and growing businesses.',
     features: [
-      'Managed hosting',
-      'Your own email provider',
-      'Up to 10,000 subscribers',
-      'Automatic updates',
-      'Premium templates',
-      'Email support',
+      '10,000 subscribers',
+      '100 posts per month',
+      'Team collaboration',
+      'Organizations & teams',
       'Advanced analytics',
+      'Custom domains',
+      'Priority support',
+      'Premium templates',
+      'A/B testing',
       'API access',
     ],
     cta: 'Start 14-Day Free Trial',
-    priceId: 'hosted',
+    priceId: 'pro',
     isPopular: true,
     hasTrial: true,
   },
   {
-    name: 'Pro',
+    name: 'Business',
     price: '$99',
     frequency: '/month',
     description: 'Scale without limits.',
     features: [
       'Unlimited subscribers',
-      'Unlimited emails',
-      'Your own email provider',
-      'Priority support',
-      'Advanced analytics',
-      'A/B testing',
-      'Custom domains',
-      'Team collaboration',
+      'Unlimited posts',
+      'Unlimited team members',
+      'Advanced team permissions',
+      'SSO integration',
+      'Advanced integrations',
+      'Custom webhooks',
+      'Dedicated support',
+      'SLA guarantees',
+      'White-label options',
     ],
     cta: 'Start 14-Day Free Trial',
-    priceId: 'pro',
+    priceId: 'business',
     isPopular: false,
     hasTrial: true,
   },

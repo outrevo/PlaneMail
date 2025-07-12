@@ -121,8 +121,28 @@ async function handleSubscriptionCreated(subscription: SubscriptionCreated) {
     return;
   }
 
+  if (!user && clerkUserId) {
+    // User doesn't exist in appUsers table, create them
+    console.log(`Creating user in appUsers table: ${clerkUserId}`);
+    try {
+      await db.insert(appUsers).values({
+        clerkUserId: clerkUserId,
+      });
+      
+      // Fetch the newly created user
+      user = await db.query.appUsers.findFirst({
+        where: eq(appUsers.clerkUserId, clerkUserId),
+      });
+      
+      console.log(`Successfully created user: ${clerkUserId}`);
+    } catch (error) {
+      console.error(`Failed to create user ${clerkUserId}:`, error);
+      return;
+    }
+  }
+
   if (!user) {
-    console.error(`User not found for ID: ${clerkUserId || userEmail}`);
+    console.error(`User still not found after creation attempt: ${clerkUserId || userEmail}`);
     return;
   }
 
