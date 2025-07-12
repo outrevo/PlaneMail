@@ -1,11 +1,13 @@
 'use server';
 
-import { db } from '@/lib/drizzle';
-import { posts, segments as dbSegments, userIntegrations, postSegments } from '@/db/schema';
-import { auth } from '@clerk/nextjs/server';
-import { eq, and, desc, inArray } from 'drizzle-orm';
-import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { auth } from '@clerk/nextjs/server';
+import { revalidatePath } from 'next/cache';
+import { and, eq, desc, inArray } from 'drizzle-orm';
+import { db } from '@/lib/drizzle';
+import { posts, postSegments, segments as dbSegments, userIntegrations } from '@/db/schema';
+import type { EmailJobData } from '@planemail/shared';
+import { convertToEmailHTML } from '@/lib/email-html-converter';
 import { 
     getBrevoIntegrationDetails, 
     getMailgunIntegrationDetails, 
@@ -15,7 +17,6 @@ import {
     type AmazonSESIntegrationDetailsType
 } from '../integrations/actions';
 import { queueClient } from '@/lib/queue-client';
-import { EmailJobData } from '@planemail/shared'; 
 
 // Post creation/update schema
 const postSchema = z.object({
@@ -336,6 +337,7 @@ export async function getUserPosts(): Promise<PostWithSegments[]> {
     const userPosts = await db.select({
       id: posts.id,
       userId: posts.userId,
+      clerkOrgId: posts.clerkOrgId,
       title: posts.title,
       content: posts.content,
       excerpt: posts.excerpt,
@@ -531,6 +533,9 @@ export async function sendPostAsEmail(formDataObj: FormData) {
       configKeys: Object.keys(providerConfig)
     });
 
+    // Convert the editor HTML to email-safe HTML with inline styles
+    const emailHtmlContent = convertToEmailHTML(post.content || '');
+
     // For now, we'll use the existing newsletter job structure
     // TODO: Update queue service to handle posts directly
     const emailJobData: EmailJobData = {
@@ -540,7 +545,7 @@ export async function sendPostAsEmail(formDataObj: FormData) {
       subject: emailSubject,
       fromName,
       fromEmail,
-      htmlContent: post.content || '',
+      htmlContent: emailHtmlContent,
       sendingProviderId,
       recipients, // Now populated with actual subscribers
       providerConfig, // Now contains real API keys and configuration

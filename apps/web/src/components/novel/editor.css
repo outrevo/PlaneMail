@@ -1,11 +1,11 @@
-/* Novel Editor Styles with Glassmorphism */
+/* Novel Editor Styles with Theme-Aware Glassmorphism */
 .ProseMirror {
   outline: none;
   position: relative;
   backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.05);
+  background: hsl(var(--card));
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid hsl(var(--border));
 }
 
 .ProseMirror .is-editor-empty:first-child::before {
@@ -17,7 +17,7 @@
   opacity: 0.7;
 }
 
-/* Block level hover states and indicators with glassmorphism */
+/* Block level hover states and indicators with theme-aware glassmorphism */
 .ProseMirror > * {
   position: relative;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -27,12 +27,12 @@
 }
 
 .ProseMirror > *:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: hsl(var(--muted) / 0.5);
   backdrop-filter: blur(8px);
   padding-left: 12px;
   margin-left: -12px;
-  border-left: 3px solid rgba(var(--primary), 0.5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-left: 3px solid hsl(var(--primary) / 0.5);
+  box-shadow: 0 4px 12px hsl(var(--border) / 0.3);
 }
 
 /* Paragraph specific styles */
@@ -83,16 +83,16 @@
   line-height: 1.6;
 }
 
-/* Slash command menu styles with glassmorphism */
+/* Slash command menu styles with theme-aware glassmorphism */
 .slash-command-menu {
-  background: rgba(255, 255, 255, 0.1);
+  background: hsl(var(--popover));
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid hsl(var(--border));
   border-radius: 16px;
   box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 20px 25px -5px hsl(var(--border) / 0.3),
+    0 10px 10px -5px hsl(var(--border) / 0.2),
+    inset 0 1px 0 hsl(var(--accent) / 0.15);
   padding: 8px;
   max-height: 320px;
   overflow-y: auto;
@@ -105,7 +105,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  background: hsl(var(--accent) / 0.1);
   border-radius: 16px;
   z-index: -1;
 }
@@ -129,7 +129,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: hsl(var(--accent) / 0.05);
   border-radius: 12px;
   opacity: 0;
   transition: opacity 0.2s ease;
@@ -138,10 +138,10 @@
 
 .slash-command-item:hover,
 .slash-command-item.selected {
-  background: rgba(255, 255, 255, 0.15);
+  background: hsl(var(--accent));
   backdrop-filter: blur(10px);
   transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 25px hsl(var(--border) / 0.4);
 }
 
 .slash-command-item:hover::before,
@@ -155,10 +155,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid hsl(var(--border));
   border-radius: 10px;
   margin-right: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: hsl(var(--muted) / 0.5);
   backdrop-filter: blur(10px);
   color: hsl(var(--foreground));
   transition: all 0.2s ease;
@@ -191,11 +191,11 @@
   display: block;
 }
 
-/* Code block styles with glassmorphism */
+/* Code block styles with theme-aware glassmorphism */
 .ProseMirror pre {
-  background: rgba(255, 255, 255, 0.1);
+  background: hsl(var(--muted));
   backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid hsl(var(--border));
   color: hsl(var(--muted-foreground));
   border-radius: 12px;
   padding: 20px;
@@ -205,8 +205,8 @@
   overflow-x: auto;
   margin: 16px 0;
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 8px 32px hsl(var(--border) / 0.3),
+    inset 0 1px 0 hsl(var(--accent) / 0.1);
   position: relative;
 }
 
@@ -214,35 +214,35 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  background: hsl(var(--accent) / 0.05);
   border-radius: 12px;
   z-index: -1;
 }
 
-/* Inline code styles with glassmorphism */
+/* Inline code styles with theme-aware glassmorphism */
 .ProseMirror code {
-  background: rgba(255, 255, 255, 0.1);
+  background: hsl(var(--muted));
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid hsl(var(--border));
   color: hsl(var(--muted-foreground));
   border-radius: 6px;
   padding: 3px 6px;
   font-family: 'Monaco', 'Consolas', 'Ubuntu Mono', monospace;
   font-size: 0.9em;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px hsl(var(--border) / 0.2);
 }
 
-/* Blockquote styles with glassmorphism */
+/* Blockquote styles with theme-aware glassmorphism */
 .ProseMirror blockquote {
-  border-left: 4px solid rgba(var(--primary), 0.6);
-  background: rgba(255, 255, 255, 0.05);
+  border-left: 4px solid hsl(var(--primary) / 0.6);
+  background: hsl(var(--muted) / 0.5);
   backdrop-filter: blur(10px);
   border-radius: 8px;
   padding: 16px 16px 16px 20px;
   margin: 16px 0;
   font-style: italic;
   color: hsl(var(--muted-foreground));
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 16px hsl(var(--border) / 0.2);
   position: relative;
 }
 
@@ -250,7 +250,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  background: hsl(var(--accent) / 0.03);
   border-radius: 8px;
   z-index: -1;
 }
@@ -293,16 +293,16 @@
   color: hsl(var(--primary) / 0.8);
 }
 
-/* Glassmorphism styles for bubble menu */
+/* Theme-aware glassmorphism styles for bubble menu */
 .bubble-menu-glass {
-  background: rgba(255, 255, 255, 0.1);
+  background: hsl(var(--popover));
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid hsl(var(--border));
   border-radius: 16px;
   box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 20px 25px -5px hsl(var(--border) / 0.3),
+    0 10px 10px -5px hsl(var(--border) / 0.2),
+    inset 0 1px 0 hsl(var(--accent) / 0.15);
   padding: 8px;
   display: flex;
   align-items: center;
@@ -325,7 +325,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  background: hsl(var(--accent) / 0.1);
   border-radius: 16px;
   z-index: -1;
 }
@@ -346,16 +346,16 @@
   margin-right: 4px;
 }
 
-/* Glassmorphism dropdown */
+/* Theme-aware glassmorphism dropdown */
 .dropdown-glass {
-  background: rgba(255, 255, 255, 0.1);
+  background: hsl(var(--popover));
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid hsl(var(--border));
   border-radius: 12px;
   box-shadow: 
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    0 20px 25px -5px hsl(var(--border) / 0.3),
+    0 10px 10px -5px hsl(var(--border) / 0.2),
+    inset 0 1px 0 hsl(var(--accent) / 0.15);
   z-index: 1000 !important;
   min-width: 180px;
   max-height: 300px;
@@ -367,7 +367,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  background: hsl(var(--accent) / 0.05);
   border-radius: 12px;
   z-index: -1;
 }
@@ -384,30 +384,7 @@
   text-overflow: ellipsis;
 }
 
-/* Dark theme adjustments */
-@media (prefers-color-scheme: dark) {
-  .bubble-menu-glass,
-  .dropdown-glass {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .bubble-menu-glass::before,
-  .dropdown-glass::before {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-  }
-}
-
-[data-theme="dark"] .bubble-menu-glass,
-[data-theme="dark"] .dropdown-glass {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-[data-theme="dark"] .bubble-menu-glass::before,
-[data-theme="dark"] .dropdown-glass::before {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-}
+/* Remove old manual dark theme overrides - now using CSS variables */
 
 /* Force proper dropdown positioning within bubble menu */
 .bubble-menu-glass [data-radix-popper-content-wrapper] {
