@@ -111,10 +111,14 @@ export default function PostsPage() {
   // Newsletter jobs tracking
   const { 
     jobs: newsletterJobs, 
+    jobStatuses,
+    isPolling,
     addJob: addNewsletterJob, 
     removeJob: removeNewsletterJob, 
     markJobCompleted,
-    clearJobs: clearNewsletterJobs 
+    clearJobs: clearNewsletterJobs,
+    getActiveJobs,
+    getJobStatus
   } = useNewsletterJobs();
 
   // Pagination state
@@ -521,6 +525,8 @@ export default function PostsPage() {
       {newsletterJobs.length > 0 && (
         <NewsletterProgressWidget
           jobs={newsletterJobs}
+          jobStatuses={jobStatuses}
+          isPolling={isPolling}
           onJobComplete={markJobCompleted}
           onJobRemove={removeNewsletterJob}
           onClearAll={clearNewsletterJobs}

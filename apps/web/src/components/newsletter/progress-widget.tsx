@@ -17,6 +17,8 @@ import { NewsletterProgressTracker, NewsletterJob } from './progress-tracker';
 
 interface NewsletterProgressWidgetProps {
   jobs: NewsletterJob[];
+  jobStatuses?: Record<string, any>;
+  isPolling?: boolean;
   onJobComplete?: (jobId: string, success: boolean) => void;
   onJobRemove?: (jobId: string) => void;
   onClearAll?: () => void;
@@ -25,6 +27,8 @@ interface NewsletterProgressWidgetProps {
 
 export function NewsletterProgressWidget({ 
   jobs, 
+  jobStatuses,
+  isPolling,
   onJobComplete, 
   onJobRemove,
   onClearAll,
@@ -36,9 +40,14 @@ export function NewsletterProgressWidget({
     return null;
   }
 
-  // Count jobs by status (we'll assume status from the age since we don't have it here)
-  const activeJobs = jobs.length; // Simplified - the tracker component will handle real status
-  const hasActiveJobs = activeJobs > 0;
+  // Count active jobs using actual status information
+  const activeJobs = jobStatuses 
+    ? jobs.filter(job => {
+        const status = jobStatuses[job.jobId];
+        return !status || ['waiting', 'active', 'delayed'].includes(status.status);
+      })
+    : jobs; // Fallback to showing all jobs if no status info
+  const hasActiveJobs = activeJobs.length > 0;
 
   return (
     <div className={className}>
@@ -63,7 +72,7 @@ export function NewsletterProgressWidget({
               <Badge variant="secondary" className="text-xs">
                 {jobs.length} {jobs.length === 1 ? 'job' : 'jobs'}
               </Badge>
-              {hasActiveJobs && (
+              {hasActiveJobs && (isPolling || !jobStatuses) && (
                 <Loader2 className="h-3 w-3 text-blue-500 animate-spin" />
               )}
               {isExpanded ? (
@@ -96,6 +105,8 @@ export function NewsletterProgressWidget({
               {/* Progress tracker */}
               <NewsletterProgressTracker
                 jobs={jobs}
+                jobStatuses={jobStatuses}
+                isPolling={isPolling}
                 onJobComplete={onJobComplete}
                 onJobRemove={onJobRemove}
               />

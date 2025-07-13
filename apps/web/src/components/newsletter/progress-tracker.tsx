@@ -54,6 +54,8 @@ export interface JobStatus {
 
 interface NewsletterProgressTrackerProps {
   jobs: NewsletterJob[];
+  jobStatuses?: Record<string, JobStatus>;
+  isPolling?: boolean;
   onJobComplete?: (jobId: string, success: boolean) => void;
   onJobRemove?: (jobId: string) => void;
   className?: string;
@@ -63,13 +65,28 @@ const queueClient = new QueueServiceClient();
 
 export function NewsletterProgressTracker({ 
   jobs, 
+  jobStatuses: providedJobStatuses,
+  isPolling: providedIsPolling,
   onJobComplete, 
   onJobRemove,
   className 
 }: NewsletterProgressTrackerProps) {
-  const [jobStatuses, setJobStatuses] = useState<Record<string, JobStatus>>({});
+  const [jobStatuses, setJobStatuses] = useState<Record<string, JobStatus>>(providedJobStatuses || {});
   const [isPolling, setIsPolling] = useState(false);
   const { toast } = useToast();
+
+  // Use provided statuses if available, otherwise fetch our own
+  const shouldUseOwnPolling = !providedJobStatuses;
+
+  // Update local state when provided statuses change
+  useEffect(() => {
+    if (providedJobStatuses) {
+      setJobStatuses(providedJobStatuses);
+    }
+  }, [providedJobStatuses]);
+
+  // Use provided polling state if available
+  const effectiveIsPolling = providedIsPolling !== undefined ? providedIsPolling : isPolling;
 
   const fetchJobStatus = useCallback(async (jobId: string): Promise<JobStatus | null> => {
     try {
@@ -130,8 +147,10 @@ export function NewsletterProgressTracker({
     setIsPolling(false);
   }, [jobs, jobStatuses, fetchJobStatus, onJobComplete, toast]);
 
-  // Poll job statuses every 2 seconds for active jobs
+  // Poll job statuses every 2 seconds for active jobs (only if not using provided statuses)
   useEffect(() => {
+    if (!shouldUseOwnPolling) return;
+    
     const activeJobs = jobs.filter(job => {
       const status = jobStatuses[job.jobId];
       return !status || ['waiting', 'active', 'delayed'].includes(status.status);
@@ -141,14 +160,16 @@ export function NewsletterProgressTracker({
 
     const interval = setInterval(pollJobStatuses, 2000);
     return () => clearInterval(interval);
-  }, [jobs, jobStatuses, pollJobStatuses]);
+  }, [jobs, jobStatuses, pollJobStatuses, shouldUseOwnPolling]);
 
-  // Initial fetch
+  // Initial fetch (only if not using provided statuses)
   useEffect(() => {
+    if (!shouldUseOwnPolling) return;
+    
     if (jobs.length > 0) {
       pollJobStatuses();
     }
-  }, [jobs.length > 0 ? jobs.map(j => j.jobId).join(',') : '']);
+  }, [jobs.length > 0 ? jobs.map(j => j.jobId).join(',') : '', shouldUseOwnPolling]);
 
   const getStatusIcon = (status?: string) => {
     switch (status) {
@@ -250,7 +271,7 @@ export function NewsletterProgressTracker({
                         <Progress value={status.progress || 0} className="h-2" />
                         <div className="flex justify-between text-xs text-muted-foreground">
                           <span>Progress: {status.progress || 0}%</span>
-                          {isPolling && <RefreshCw className="h-3 w-3 animate-spin" />}
+                          {effectiveIsPolling && <RefreshCw className="h-3 w-3 animate-spin" />}
                         </div>
                       </div>
                     )}
