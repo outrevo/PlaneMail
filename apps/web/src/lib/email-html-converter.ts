@@ -192,13 +192,19 @@ const EMAIL_STYLES = {
 /**
  * Convert TipTap editor HTML to email-safe HTML with inline styles
  */
-export function convertToEmailHTML(editorHTML: string): string {
+export function convertToEmailHTML(
+  editorHTML: string,
+  options?: {
+    unsubscribeUrl?: string;
+    senderAddress?: string;
+  }
+): string {
   if (!editorHTML) return '';
-  
+
   // Create a DOM from the editor HTML
   const dom = new JSDOM(editorHTML);
   const document = dom.window.document;
-  
+
   // Function to apply styles to an element
   function applyInlineStyles(element: Element, tag: string) {
     const styles = EMAIL_STYLES[tag as keyof typeof EMAIL_STYLES];
@@ -208,7 +214,7 @@ export function convertToEmailHTML(editorHTML: string): string {
       element.setAttribute('style', cleanStyles);
     }
   }
-  
+
   // Apply styles to all relevant elements
   Object.keys(EMAIL_STYLES).forEach(tag => {
     const elements = document.querySelectorAll(tag);
@@ -216,9 +222,9 @@ export function convertToEmailHTML(editorHTML: string): string {
       applyInlineStyles(element, tag);
     });
   });
-  
+
   // Handle special cases
-  
+
   // Convert task list items
   const taskListItems = document.querySelectorAll('li[data-type="taskItem"]');
   taskListItems.forEach(item => {
@@ -227,7 +233,7 @@ export function convertToEmailHTML(editorHTML: string): string {
       applyInlineStyles(checkbox, 'input[type="checkbox"]');
     }
   });
-  
+
   // Convert highlighted text
   const highlights = document.querySelectorAll('[style*="background"]');
   highlights.forEach(element => {
@@ -239,7 +245,7 @@ export function convertToEmailHTML(editorHTML: string): string {
       element.parentNode?.replaceChild(mark, element);
     }
   });
-  
+
   // Ensure images have alt attributes for accessibility
   const images = document.querySelectorAll('img');
   images.forEach(img => {
@@ -247,7 +253,7 @@ export function convertToEmailHTML(editorHTML: string): string {
       img.setAttribute('alt', img.getAttribute('title') || 'Image');
     }
   });
-  
+
   // Wrap everything in a container with base styles
   const container = document.createElement('div');
   container.setAttribute('style', `
@@ -258,13 +264,28 @@ export function convertToEmailHTML(editorHTML: string): string {
     line-height: 1.6;
     color: #333333;
   `.replace(/\s+/g, ' ').trim());
-  
+
   // Move all body content to the container
   while (document.body.firstChild) {
     container.appendChild(document.body.firstChild);
   }
   document.body.appendChild(container);
-  
+
+  // --- Compliance: Unsubscribe link and sender address ---
+  const unsubscribeUrl = options?.unsubscribeUrl || '#';
+  const senderAddress = options?.senderAddress || 'Your Company Address';
+  const complianceFooter = `
+    <hr style="margin:32px 0 16px 0; border:none; border-top:1px solid #e0e0e0;" />
+    <div style="font-size:13px; color:#888; text-align:center; line-height:1.6;">
+      You are receiving this email because you subscribed to updates.<br />
+      <a href="${unsubscribeUrl}" style="color:#007aff; text-decoration:underline;">Unsubscribe</a> &nbsp;|&nbsp; 
+      <span>${senderAddress}</span>
+    </div>
+  `;
+
+  // Append compliance footer to the container
+  container.insertAdjacentHTML('beforeend', complianceFooter);
+
   // Return the complete HTML with proper email structure
   return `
 <!DOCTYPE html>

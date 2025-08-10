@@ -14,6 +14,7 @@ import {
   Code2,
   CreditCard,
   Github,
+  Mail,
 } from "lucide-react";
 import {
   SidebarProvider,
@@ -37,7 +38,7 @@ import { useUserInit } from "@/hooks/use-user-init";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/posts", label: "Posts", icon: FileText },
+  { href: "/content", label: "Content", icon: FileText },
   { href: "/subscribers", label: "Subscribers", icon: Users },
   { href: "/integrations", label: "Integrations", icon: Plug },
   { href: "/billing", label: "Billing", icon: CreditCard },

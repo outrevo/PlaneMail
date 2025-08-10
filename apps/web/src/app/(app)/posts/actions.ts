@@ -5,7 +5,7 @@ import { auth } from '@clerk/nextjs/server';
 import { revalidatePath } from 'next/cache';
 import { and, eq, desc, inArray } from 'drizzle-orm';
 import { db } from '@/lib/drizzle';
-import { posts, postSegments, segments as dbSegments, userIntegrations } from '@/db/schema';
+import { posts, postSegments, segments as dbSegments, userIntegrations, appUsers } from '@/db/schema';
 import type { EmailJobData } from '@planemail/shared';
 import { convertToEmailHTML } from '@/lib/email-html-converter';
 import { 
@@ -511,14 +511,26 @@ export async function sendPostAsEmail(formDataObj: FormData) {
 
     // Get subscribers for the selected segments
     const { getSubscribersBySegments } = await import('@/app/(app)/subscribers/actions');
-    const recipients = await getSubscribersBySegments(validatedSegmentIds);
+    const allRecipients = await getSubscribersBySegments(validatedSegmentIds);
 
-    console.log(`📧 Preparing to send email to ${recipients.length} subscribers`);
+    console.log(`📧 Found ${allRecipients.length} potential recipients`);
+
+    // COMPLIANCE: Filter out suppressed emails (unsubscribed, bounced, pending)
+    const { filterSuppressionList } = await import('@/lib/suppression-list');
+    const { sendable: recipients, suppressed } = await filterSuppressionList(userId, allRecipients);
+
+    console.log(`✅ ${recipients.length} sendable, ❌ ${suppressed.length} suppressed`);
+    
+    if (suppressed.length > 0) {
+      console.log('Suppressed recipients:', suppressed.map(s => `${s.email} (${s.reason})`));
+    }
 
     if (recipients.length === 0) {
       return { 
         success: false, 
-        message: 'No active subscribers found in the selected segments', 
+        message: suppressed.length > 0 
+          ? `All ${suppressed.length} recipients are suppressed (unsubscribed/bounced/pending)` 
+          : 'No active subscribers found in the selected segments', 
         errors: null,
         jobId: null
       };
@@ -533,8 +545,34 @@ export async function sendPostAsEmail(formDataObj: FormData) {
       configKeys: Object.keys(providerConfig)
     });
 
-    // Convert the editor HTML to email-safe HTML with inline styles
-    const emailHtmlContent = convertToEmailHTML(post.content || '');
+    // COMPLIANCE: Get user's sender address for emails
+    const userProfile = await db
+      .select({
+        senderAddressLine1: appUsers.senderAddressLine1,
+        senderAddressLine2: appUsers.senderAddressLine2,
+        senderCity: appUsers.senderCity,
+        senderState: appUsers.senderState,
+        senderPostalCode: appUsers.senderPostalCode,
+        senderCountry: appUsers.senderCountry,
+      })
+      .from(appUsers)
+      .where(eq(appUsers.clerkUserId, userId))
+      .limit(1);
+
+    const { formatSenderAddress } = await import('@/lib/compliance-utils');
+    const senderAddress = userProfile.length > 0 
+      ? formatSenderAddress(userProfile[0])
+      : "Please update your sender address in profile settings for compliance";
+
+    // Convert the editor HTML to email-safe HTML with compliance footer
+    // Note: We'll use a generic unsubscribe URL template here since we need individual tokens per recipient
+    // The queue service will need to replace this with actual subscriber-specific URLs
+    const unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/public/unsubscribe/{{UNSUBSCRIBE_TOKEN}}?email={{SUBSCRIBER_EMAIL}}&id={{SUBSCRIBER_ID}}`;
+    
+    const emailHtmlContent = convertToEmailHTML(post.content || '', {
+      unsubscribeUrl,
+      senderAddress
+    });
 
     // For now, we'll use the existing newsletter job structure
     // TODO: Update queue service to handle posts directly

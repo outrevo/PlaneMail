@@ -12,6 +12,15 @@ export const UserRole = pgTable('user_role', {
 export const appUsers = pgTable('app_users', {
   clerkUserId: varchar('clerk_user_id', { length: 255 }).primaryKey(), 
   roleId: uuid('role_id').references(() => UserRole.id),
+  
+  // Compliance: Sender address for email compliance (CAN-SPAM, GDPR)
+  senderAddressLine1: varchar('sender_address_line1', { length: 255 }),
+  senderAddressLine2: varchar('sender_address_line2', { length: 255 }),
+  senderCity: varchar('sender_city', { length: 100 }),
+  senderState: varchar('sender_state', { length: 100 }),
+  senderPostalCode: varchar('sender_postal_code', { length: 20 }),
+  senderCountry: varchar('sender_country', { length: 100 }),
+  
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
 });
@@ -120,6 +129,8 @@ export const subscribers = pgTable('subscribers', {
   dateAdded: timestamp('date_added').defaultNow().notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+  // Double opt-in: timestamp when subscriber confirmed
+  confirmedAt: timestamp('confirmed_at'),
 }, (table) => {
   return {
     userEmailUnique: uniqueIndex('user_email_idx').on(table.userId, table.email),
@@ -196,6 +207,8 @@ export const publicSiteSettings = pgTable('public_site_settings', {
   
   // Features
   enableNewsletterSignup: boolean('enable_newsletter_signup').default(true),
+  // Allow user to decide if double opt-in is required
+  enableDoubleOptIn: boolean('enable_double_opt_in').default(false).notNull(),
   
   // Custom code
   customCss: text('custom_css'),

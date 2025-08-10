@@ -454,6 +454,7 @@ export async function getSubscribersBySegments(segmentIds?: string[]) {
       return allSubscribers.map(sub => ({
         email: sub.email,
         name: sub.name || sub.email.split('@')[0], // Fallback to email prefix if no name
+        metadata: { subscriberId: sub.id },
       }));
     }
 
@@ -476,6 +477,7 @@ export async function getSubscribersBySegments(segmentIds?: string[]) {
     return subscribersInSegments.map(sub => ({
       email: sub.email,
       name: sub.name || sub.email.split('@')[0], // Fallback to email prefix if no name
+      metadata: { subscriberId: sub.id },
     }));
 
   } catch (error) {

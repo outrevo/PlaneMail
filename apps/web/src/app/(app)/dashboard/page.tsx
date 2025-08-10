@@ -16,7 +16,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   const dashboardCards = [
     { title: 'Total Subscribers', value: statsData.totalSubscribers.toLocaleString(), icon: Users, trend: '+12% this month' },
-    { title: 'Posts Sent', value: statsData.postsSent.toLocaleString(), icon: Mail, trend: '+5 last week' },
+    { title: 'Content Sent', value: statsData.postsSent.toLocaleString(), icon: Mail, trend: '+5 last week' },
     { title: 'Avg. Open Rate', value: 'N/A', icon: BarChart, trend: 'Tracking coming soon' },
     { title: 'Avg. Click Rate', value: 'N/A', icon: LineChart, trend: 'Tracking coming soon' },
   ];
@@ -35,9 +35,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </p>
         </div>
         <Button asChild className="text-sm font-medium rounded-full transition-colors duration-200" style={{letterSpacing: '-0.01em'}}>
-          <Link href="/posts">
+          <Link href="/content/new">
             <Plus className="mr-2 h-4 w-4" />
-            Create Post
+            Create Content
           </Link>
         </Button>
       </div>

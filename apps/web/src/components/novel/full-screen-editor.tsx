@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { NovelEditor } from '@/components/novel/editor';
 import { X, ArrowLeft, ArrowRight, Save, Send, Globe, Mail, Users, Eye, Edit3 } from 'lucide-react';
 import { type JSONContent } from '@tiptap/react';
+import { useToast } from '@/hooks/use-toast';
 
 interface FullScreenPostEditorProps {
   workflowData: any;
@@ -52,6 +53,12 @@ export function FullScreenPostEditor({
   availableProviders = [],
 }: FullScreenPostEditorProps) {
   const [titleFocused, setTitleFocused] = useState(false);
+  const { toast } = useToast();
+
+  // Derived compliance state
+  const isEmailCompliant = !workflowData.emailEnabled || (
+    workflowData.compliance?.hasUnsubscribe && workflowData.compliance?.hasSenderAddress
+  );
 
   const getCurrentStepIndex = () => {
     return WORKFLOW_STEPS.findIndex(step => step.id === currentStep);
@@ -187,17 +194,30 @@ export function FullScreenPostEditor({
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
-              <Button 
-                onClick={onPublish}
-                disabled={!canProceedToNextStep() || isSaving}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Publish
-              </Button>
+              <div className="flex items-center gap-3">
+                {!isEmailCompliant && workflowData.emailEnabled && (
+                  <span className="text-xs text-amber-600">Email compliance incomplete</span>
+                )}
+                <Button 
+                  onClick={onPublish}
+                  disabled={!canProceedToNextStep() || isSaving || !isEmailCompliant}
+                  className="bg-green-600 hover:bg-green-700 disabled:opacity-60"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Publish
+                </Button>
+              </div>
             )}
           </div>
         </div>
+        {!isEmailCompliant && workflowData.emailEnabled && (
+          <div className="px-6 py-2 bg-amber-50 border-t border-b border-amber-200 text-amber-800 text-xs flex items-center gap-2">
+            <span>Missing:</span>
+            {!workflowData.compliance?.hasUnsubscribe && <span>Unsubscribe link</span>}
+            {!workflowData.compliance?.hasSenderAddress && <span>Sender address</span>}
+            <Button size="sm" variant="outline" className="ml-auto h-6 px-2 text-[11px]" onClick={() => setCurrentStep('compose')}>Fix in Compose</Button>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
@@ -250,9 +270,11 @@ export function FullScreenPostEditor({
                     contentJson: json
                   }));
                 }}
+                onComplianceChange={(status) => setWorkflowData((prev: any) => ({ ...prev, compliance: status }))}
                 placeholder="Start writing your post... Press '/' for commands"
                 className="min-h-[60vh]"
                 showBaseTemplate={!workflowData.contentHtml && !workflowData.content}
+                mode="embedded"
               />
             </div>
           </div>
@@ -407,6 +429,38 @@ export function FullScreenPostEditor({
                         placeholder="Email subject line"
                         className="mt-2"
                       />
+                      {workflowData.emailEnabled && workflowData.selectedSendingProvider && (
+                        <div className="mt-3">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={!workflowData.fromEmail || !workflowData.emailSubject}
+                            onClick={async () => {
+                              try {
+                                const res = await fetch('/api/email/test-send', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    subject: workflowData.emailSubject,
+                                    fromName: workflowData.fromName || 'Test',
+                                    fromEmail: workflowData.fromEmail,
+                                    html: workflowData.contentHtml || ''
+                                  })
+                                });
+                                if (res.ok) {
+                                  toast({ title: 'Test email queued', description: 'Check your inbox shortly.' });
+                                } else {
+                                  const data = await res.json().catch(()=>({ message: 'Failed'}));
+                                  toast({ title: 'Test failed', description: data.message || 'Error', variant: 'destructive' });
+                                }
+                              } catch (e:any) {
+                                toast({ title: 'Test failed', description: e.message, variant: 'destructive' });
+                              }
+                            }}
+                          >Send Test</Button>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
@@ -580,6 +634,23 @@ export function FullScreenPostEditor({
                     {workflowData.content?.length > 300 && '...'}
                   </div>
                 </div>
+
+                {workflowData.emailEnabled && (
+                  <div className="p-6 border border-border rounded-lg">
+                    <h4 className="font-medium mb-3">Email Compliance</h4>
+                    <ul className="space-y-2 text-sm">
+                      <li className={`flex items-center gap-2 ${workflowData.compliance?.hasUnsubscribe ? 'text-green-600' : 'text-red-600'}`}>{workflowData.compliance?.hasUnsubscribe ? '✓' : '✗'} Unsubscribe link present</li>
+                      <li className={`flex items-center gap-2 ${workflowData.compliance?.hasSenderAddress ? 'text-green-600' : 'text-red-600'}`}>{workflowData.compliance?.hasSenderAddress ? '✓' : '✗'} Sender physical address placeholder</li>
+                      <li className="flex items-center gap-2 text-muted-foreground">Words: {workflowData.compliance?.wordCount || 0} · Read ~{workflowData.compliance?.readingTimeMin || 1}m</li>
+                    </ul>
+                    {(!workflowData.compliance?.hasUnsubscribe || !workflowData.compliance?.hasSenderAddress) && (
+                      <div className="mt-4 p-3 rounded border border-amber-300 bg-amber-50 text-amber-800 text-xs flex items-center gap-2">
+                        Missing required compliance elements.
+                        <Button size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={() => setCurrentStep('compose')}>Fix Now</Button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

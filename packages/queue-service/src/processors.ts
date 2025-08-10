@@ -1,5 +1,5 @@
 import { Job } from 'bullmq';
-import { EmailJobData, EmailSendResult, BulkEmailSendResult } from '@planemail/shared';
+import { EmailJobData, EmailSendResult, BulkEmailSendResult, generateUnsubscribeUrl } from '@planemail/shared';
 import * as Brevo from '@getbrevo/brevo';
 import Mailgun from 'mailgun.js';
 import formData from 'form-data';
@@ -142,6 +142,17 @@ export class BrevoEmailProcessor extends BaseEmailProcessor {
         throw new Error('Brevo configuration is missing');
       }
 
+      const unsubscribeUrl = recipient.metadata?.subscriberId
+        ? generateUnsubscribeUrl(recipient.metadata.subscriberId, recipient.email, process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL)
+        : undefined;
+      
+      const finalHtml = unsubscribeUrl
+        ? htmlContent
+            .replace(/\{\{UNSUBSCRIBE_TOKEN\}\}/g, unsubscribeUrl.split('/').slice(-1)[0].split('?')[0])
+            .replace(/\{\{SUBSCRIBER_EMAIL\}\}/g, encodeURIComponent(recipient.email))
+            .replace(/\{\{SUBSCRIBER_ID\}\}/g, String(recipient.metadata?.subscriberId))
+        : htmlContent;
+
       const { apiKey } = providerConfig.brevo;
       
       const transacEmailApi = new Brevo.TransactionalEmailsApi();
@@ -151,7 +162,7 @@ export class BrevoEmailProcessor extends BaseEmailProcessor {
       sendSmtpEmail.sender = { email: fromEmail, name: fromName };
       sendSmtpEmail.to = [{ email: recipient.email, name: recipient.name }];
       sendSmtpEmail.subject = subject;
-      sendSmtpEmail.htmlContent = htmlContent;
+      sendSmtpEmail.htmlContent = finalHtml;
 
       // Add custom headers for tracking
       sendSmtpEmail.headers = {
@@ -199,6 +210,17 @@ export class MailgunEmailProcessor extends BaseEmailProcessor {
         throw new Error('Mailgun configuration is missing');
       }
 
+      const unsubscribeUrl = recipient.metadata?.subscriberId
+        ? generateUnsubscribeUrl(recipient.metadata.subscriberId, recipient.email, process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL)
+        : undefined;
+
+      const finalHtml = unsubscribeUrl
+        ? htmlContent
+            .replace(/\{\{UNSUBSCRIBE_TOKEN\}\}/g, unsubscribeUrl.split('/').slice(-1)[0].split('?')[0])
+            .replace(/\{\{SUBSCRIBER_EMAIL\}\}/g, encodeURIComponent(recipient.email))
+            .replace(/\{\{SUBSCRIBER_ID\}\}/g, String(recipient.metadata?.subscriberId))
+        : htmlContent;
+
       const { apiKey, domain, region } = providerConfig.mailgun;
       
       const mailgun = new Mailgun(formData);
@@ -212,7 +234,7 @@ export class MailgunEmailProcessor extends BaseEmailProcessor {
         from: `${fromName} <${fromEmail}>`,
         to: [recipient.email],
         subject: subject,
-        html: htmlContent,
+        html: finalHtml,
         'h:X-Newsletter-ID': jobData.newsletterId || '',
         'h:X-User-ID': jobData.userId,
       });
@@ -255,6 +277,17 @@ export class AmazonSESEmailProcessor extends BaseEmailProcessor {
         throw new Error('Amazon SES configuration is missing');
       }
 
+      const unsubscribeUrl = recipient.metadata?.subscriberId
+        ? generateUnsubscribeUrl(recipient.metadata.subscriberId, recipient.email, process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL)
+        : undefined;
+
+      const finalHtml = unsubscribeUrl
+        ? htmlContent
+            .replace(/\{\{UNSUBSCRIBE_TOKEN\}\}/g, unsubscribeUrl.split('/').slice(-1)[0].split('?')[0])
+            .replace(/\{\{SUBSCRIBER_EMAIL\}\}/g, encodeURIComponent(recipient.email))
+            .replace(/\{\{SUBSCRIBER_ID\}\}/g, String(recipient.metadata?.subscriberId))
+        : htmlContent;
+
       const { accessKeyId, secretAccessKey, region } = providerConfig.amazon_ses;
       
       const sesClient = new SESv2Client({
@@ -267,7 +300,7 @@ export class AmazonSESEmailProcessor extends BaseEmailProcessor {
         Content: {
           Simple: {
             Subject: { Data: subject, Charset: 'UTF-8' },
-            Body: { Html: { Data: htmlContent, Charset: 'UTF-8' } },
+            Body: { Html: { Data: finalHtml, Charset: 'UTF-8' } },
           },
         },
         FromEmailAddress: fromEmail,

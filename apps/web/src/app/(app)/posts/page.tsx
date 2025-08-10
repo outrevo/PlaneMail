@@ -53,6 +53,7 @@ import { useNewsletterJobs } from '@/hooks/use-newsletter-jobs';
 import { NovelEditor } from '@/components/novel/editor';
 import { FullScreenPostEditor } from '@/components/novel/full-screen-editor';
 import { useDebouncedCallback } from 'use-debounce';
+import { useRouter } from 'next/navigation';
 
 // Multi-step workflow steps
 const WORKFLOW_STEPS = [
@@ -65,6 +66,7 @@ const WORKFLOW_STEPS = [
 
 export default function PostsPage() {
   const { toast } = useToast();
+  const router = useRouter();
   
   // Workflow state
   const [currentStep, setCurrentStep] = useState('compose');
@@ -513,6 +515,10 @@ export default function PostsPage() {
               <Globe className="h-4 w-4 mr-2" />
               Site Settings
             </Link>
+          </Button>
+          <Button variant="outline" onClick={() => router.push('/campaigns/new')}>
+            <Mail className="h-4 w-4 mr-2" />
+            New Campaign
           </Button>
           <Button onClick={() => { resetWorkflow(); setShowCreateFlow(true); }}>
             <PlusCircle className="h-4 w-4 mr-2" />
