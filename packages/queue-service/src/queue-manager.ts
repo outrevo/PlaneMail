@@ -24,6 +24,7 @@ class EmailQueueManager {
   public newsletterQueue: Queue<EmailJobData>;
   public transactionalQueue: Queue<EmailJobData>;
   public bulkQueue: Queue<EmailJobData>;
+  public sequenceQueue: Queue<any>; // For sequence processing jobs
 
   private constructor() {
     // Newsletter queue - for newsletter campaigns
@@ -46,6 +47,16 @@ class EmailQueueManager {
         ...QUEUE_OPTIONS.defaultJobOptions,
         priority: 5, // Lower priority
         delay: 1000, // Add delay between bulk emails
+      },
+    });
+
+    // Sequence queue - for marketing sequence processing
+    this.sequenceQueue = new Queue('sequence-processing', {
+      ...QUEUE_OPTIONS,
+      defaultJobOptions: {
+        ...QUEUE_OPTIONS.defaultJobOptions,
+        priority: 2, // High priority for sequence processing
+        attempts: 3,
       },
     });
 
@@ -100,6 +111,18 @@ class EmailQueueManager {
     });
   }
 
+  // Add sequence job
+  public async addSequenceJob(
+    sequenceJobData: any,
+    options?: { priority?: number; delay?: number }
+  ) {
+    return this.sequenceQueue.add('process-sequence', sequenceJobData, {
+      priority: options?.priority || 2,
+      attempts: 3,
+      delay: options?.delay,
+    });
+  }
+
   // Get queue statistics
   public async getQueueStats() {
     const [newsletterStats, transactionalStats, bulkStats] = await Promise.all([
@@ -141,7 +164,7 @@ class EmailQueueManager {
 
   // Clean up old jobs
   public async cleanQueues(): Promise<void> {
-    const queues = [this.newsletterQueue, this.transactionalQueue, this.bulkQueue];
+    const queues = [this.newsletterQueue, this.transactionalQueue, this.bulkQueue, this.sequenceQueue];
     
     await Promise.all(
       queues.map(async (queue) => {

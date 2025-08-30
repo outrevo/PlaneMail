@@ -1,10 +1,19 @@
+// Load environment variables FIRST
 import dotenv from 'dotenv';
+
+// Load .env from queue service directory
+dotenv.config();
+
 import { emailWorkerManager } from './workers';
 import { emailQueueManager } from './queue-manager';
-import './api'; // Start the HTTP API
+import { startApiServer } from './api'; // Import the start function instead of auto-importing
 
-// Load environment variables
-dotenv.config();
+// Export all sequence processor types and utilities
+export * from './sequence-processors';
+export * from './processors/base-processor';
+export * from './processors/sequence-job-processor';
+export * from './processors/email-step-processor';
+export * from './processors/step-processors';
 
 /**
  * PlaneMail Queue Service
@@ -21,6 +30,9 @@ class QueueService {
     try {
       // Check Redis connection
       await this.checkRedisConnection();
+      
+      // Start the HTTP API server
+      startApiServer();
       
       // Start workers
       await emailWorkerManager.startWorkers();

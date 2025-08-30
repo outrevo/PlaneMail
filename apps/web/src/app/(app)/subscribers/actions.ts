@@ -1,11 +1,12 @@
 'use server';
 
 import { db } from '@/lib/drizzle';
-import { subscribers, segments, subscriberSegments } from '@/db/schema';
+import { subscribers, segments, subscriberSegments, marketingSequences, sequenceEnrollments } from '@/db/schema';
 import { auth } from '@clerk/nextjs/server';
 import { eq, and, desc, inArray, like, or, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { enrollSubscriberInSequences, bulkEnrollSubscribersInSequences } from '@/lib/subscriber-utils';
 
 const subscriberSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -121,6 +122,9 @@ export async function addSubscriber(formData: FormData) {
       const segmentLinks = segmentIds.map(segmentId => ({ subscriberId: newSubscriber.id, segmentId }));
       await db.insert(subscriberSegments).values(segmentLinks).onConflictDoNothing();
     }
+
+    // Automatic sequence enrollment for new subscribers
+    await enrollSubscriberInSequences(newSubscriber.id, userId, segmentIds);
 
     revalidatePath('/subscribers');
     return { success: true, message: 'Subscriber added successfully.', subscriber: newSubscriber };
@@ -387,6 +391,21 @@ export async function bulkAddSubscribers(
       );
       if (segmentLinks.length > 0) {
         await db.insert(subscriberSegments).values(segmentLinks).onConflictDoNothing();
+      }
+    }
+
+    // Automatic sequence enrollment for newly added subscribers
+    if (addedCount > 0) {
+      const newlyAddedSubscriberData = result
+        .filter(row => !existingEmailsSet.has(row.email))
+        .map(row => ({
+          subscriberId: row.id,
+          segmentIds: segmentIdsToApply || []
+        }));
+      
+      // Use optimized bulk enrollment
+      if (newlyAddedSubscriberData.length > 0) {
+        await bulkEnrollSubscribersInSequences(newlyAddedSubscriberData, userId);
       }
     }
 

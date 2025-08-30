@@ -14,7 +14,7 @@ export class QueueServiceClient {
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.QUEUE_API_KEY || process.env.INTERNAL_API_KEY || ''}`
+        'Authorization': `Bearer ${process.env.INTERNAL_API_KEY || process.env.QUEUE_API_KEY || ''}`
       }
     });
 
@@ -86,6 +86,16 @@ export class QueueServiceClient {
       return response.data;
     } catch (error) {
       console.error('Failed to get queue stats:', error);
+      throw new Error('Queue service unavailable');
+    }
+  }
+
+  async addSequenceJob(jobData: any): Promise<any> {
+    try {
+      const response = await this.axiosInstance.post('/api/queue/sequence', jobData);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to add sequence job:', error);
       throw new Error('Queue service unavailable');
     }
   }

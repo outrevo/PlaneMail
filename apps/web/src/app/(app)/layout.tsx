@@ -39,6 +39,7 @@ import { useUserInit } from "@/hooks/use-user-init";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/content", label: "Content", icon: FileText },
+  { href: "/sequences", label: "Sequences", icon: Mail },
   { href: "/subscribers", label: "Subscribers", icon: Users },
   { href: "/integrations", label: "Integrations", icon: Plug },
   { href: "/billing", label: "Billing", icon: CreditCard },
@@ -164,7 +165,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               {isLoaded && user && <UserButton afterSignOutUrl="/" />}
             </div>
           </header>
-          <main className="flex-1 p-6 bg-muted/50">{children}</main>
+          <main>{children}</main>
         </SidebarInset>
       </SidebarProvider>
     </div>

@@ -482,3 +482,147 @@ export const organizationSubscriptionsRelations = relations(organizationSubscrip
     references: [pricingPlans.id],
   }),
 }));
+
+// Marketing Automation Sequences
+export const marketingSequences = pgTable('marketing_sequences', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: varchar('user_id', { length: 255 }).notNull().references(() => appUsers.clerkUserId, { onDelete: 'cascade' }),
+  clerkOrgId: varchar('clerk_org_id', { length: 255 }),
+  
+  // Basic sequence information
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  status: varchar('status', { length: 50 }).default('draft').notNull(), // draft, active, paused, completed
+  
+  // Trigger configuration
+  triggerType: varchar('trigger_type', { length: 50 }).notNull(), // subscription, tag_added, tag_removed, manual, webhook, date_based
+  triggerConfig: jsonb('trigger_config').notNull(), // SequenceTriggerConfig
+  
+  // Sequence settings
+  settings: jsonb('settings').notNull(), // SequenceSettings
+  
+  // Statistics (updated periodically)
+  stats: jsonb('stats').default('{"totalEntered":0,"totalCompleted":0,"totalExited":0,"currentActive":0,"conversionRate":0,"avgCompletionTime":0,"stepStats":[]}').notNull(),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+});
+
+export const sequenceSteps = pgTable('sequence_steps', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sequenceId: uuid('sequence_id').notNull().references(() => marketingSequences.id, { onDelete: 'cascade' }),
+  
+  // Step configuration
+  type: varchar('type', { length: 50 }).notNull(), // email, wait, condition, action
+  order: integer('order').notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  config: jsonb('config').notNull(), // SequenceStepConfig
+  isActive: boolean('is_active').default(true).notNull(),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+}, (table) => {
+  return {
+    sequenceOrderIdx: uniqueIndex('sequence_step_order_idx').on(table.sequenceId, table.order),
+  };
+});
+
+export const sequenceEnrollments = pgTable('sequence_enrollments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sequenceId: uuid('sequence_id').notNull().references(() => marketingSequences.id, { onDelete: 'cascade' }),
+  subscriberId: uuid('subscriber_id').notNull().references(() => subscribers.id, { onDelete: 'cascade' }),
+  
+  // Enrollment status
+  status: varchar('status', { length: 50 }).default('active').notNull(), // active, completed, exited, paused
+  currentStepId: uuid('current_step_id').references(() => sequenceSteps.id),
+  currentStepStartedAt: timestamp('current_step_started_at'),
+  nextScheduledAt: timestamp('next_scheduled_at'),
+  
+  // Tracking
+  enrolledAt: timestamp('enrolled_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at'),
+  exitedAt: timestamp('exited_at'),
+  exitReason: varchar('exit_reason', { length: 255 }),
+  
+  // Custom data for this enrollment
+  metadata: jsonb('metadata').default('{}'),
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+}, (table) => {
+  return {
+    subscriberSequenceIdx: uniqueIndex('subscriber_sequence_idx').on(table.subscriberId, table.sequenceId),
+    nextScheduledIdx: uniqueIndex('next_scheduled_idx').on(table.nextScheduledAt),
+  };
+});
+
+export const sequenceStepExecutions = pgTable('sequence_step_executions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  enrollmentId: uuid('enrollment_id').notNull().references(() => sequenceEnrollments.id, { onDelete: 'cascade' }),
+  stepId: uuid('step_id').notNull().references(() => sequenceSteps.id, { onDelete: 'cascade' }),
+  
+  // Execution details
+  status: varchar('status', { length: 50 }).notNull(), // pending, executing, completed, failed, skipped
+  startedAt: timestamp('started_at'),
+  completedAt: timestamp('completed_at'),
+  
+  // Results
+  result: jsonb('result'), // Execution result data (email IDs, action results, etc.)
+  error: text('error'), // Error message if failed
+  
+  // Email-specific tracking
+  emailJobId: varchar('email_job_id', { length: 255 }), // BullMQ job ID
+  emailMessageId: text('email_message_id'), // Provider message ID
+  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+});
+
+// Relations for marketing sequences
+export const marketingSequencesRelations = relations(marketingSequences, ({ one, many }) => ({
+  user: one(appUsers, {
+    fields: [marketingSequences.userId],
+    references: [appUsers.clerkUserId],
+  }),
+  steps: many(sequenceSteps),
+  enrollments: many(sequenceEnrollments),
+}));
+
+export const sequenceStepsRelations = relations(sequenceSteps, ({ one, many }) => ({
+  sequence: one(marketingSequences, {
+    fields: [sequenceSteps.sequenceId],
+    references: [marketingSequences.id],
+  }),
+  enrollments: many(sequenceEnrollments, {
+    relationName: 'currentStep',
+  }),
+  executions: many(sequenceStepExecutions),
+}));
+
+export const sequenceEnrollmentsRelations = relations(sequenceEnrollments, ({ one, many }) => ({
+  sequence: one(marketingSequences, {
+    fields: [sequenceEnrollments.sequenceId],
+    references: [marketingSequences.id],
+  }),
+  subscriber: one(subscribers, {
+    fields: [sequenceEnrollments.subscriberId],
+    references: [subscribers.id],
+  }),
+  currentStep: one(sequenceSteps, {
+    fields: [sequenceEnrollments.currentStepId],
+    references: [sequenceSteps.id],
+    relationName: 'currentStep',
+  }),
+  executions: many(sequenceStepExecutions),
+}));
+
+export const sequenceStepExecutionsRelations = relations(sequenceStepExecutions, ({ one }) => ({
+  enrollment: one(sequenceEnrollments, {
+    fields: [sequenceStepExecutions.enrollmentId],
+    references: [sequenceEnrollments.id],
+  }),
+  step: one(sequenceSteps, {
+    fields: [sequenceStepExecutions.stepId],
+    references: [sequenceSteps.id],
+  }),
+}));

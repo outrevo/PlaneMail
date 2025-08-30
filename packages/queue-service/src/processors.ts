@@ -1,5 +1,6 @@
 import { Job } from 'bullmq';
 import { EmailJobData, EmailSendResult, BulkEmailSendResult, generateUnsubscribeUrl } from '@planemail/shared';
+import { processSequenceJob, SequenceJobData, SequenceProcessorResult } from './sequence-processors';
 import * as Brevo from '@getbrevo/brevo';
 import Mailgun from 'mailgun.js';
 import formData from 'form-data';

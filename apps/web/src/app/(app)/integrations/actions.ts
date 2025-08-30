@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/drizzle';
-import { userIntegrations, appUsers, apiKeys as apiKeysTable, segments, subscribers as subscribersTable, subscriberSegments } from '@/db/schema';
+import { userIntegrations, appUsers, apiKeys as apiKeysTable, segments, subscribers as subscribersTable, subscriberSegments, marketingSequences, sequenceEnrollments } from '@/db/schema';
 import { auth } from '@clerk/nextjs/server';
 import { eq, and, desc, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
@@ -13,6 +13,7 @@ import { SESv2Client, GetAccountCommand, ListEmailIdentitiesCommand } from "@aws
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { triggerSubscriberCreated, triggerSegmentCreated } from '@/lib/webhooks/dispatcher';
+import { enrollSubscriberInSequences } from '@/lib/subscriber-utils';
 
 const BREVO_PROVIDER_ID = 'brevo';
 const MAILGUN_PROVIDER_ID = 'mailgun';
@@ -131,8 +132,17 @@ export async function saveBrevoApiKey(apiKey: string) {
   } catch (error: any) {
     console.error("Brevo API key validation or sender fetch failed:", error.response?.data || error.message);
     let message = "Invalid Brevo API Key or connection issue.";
+    
+    // Handle specific Brevo error cases
     if (error.response?.data?.message) {
-      message = `Brevo API Error: ${error.response.data.message}`;
+      const errorMessage = error.response.data.message;
+      
+      // Check for IP restriction error
+      if (errorMessage.includes('unrecognised IP address')) {
+        message = `Brevo IP Restriction: ${errorMessage}. Please add your IP address to Brevo's authorized IPs at https://app.brevo.com/security/authorised_ips`;
+      } else {
+        message = `Brevo API Error: ${errorMessage}`;
+      }
     } else if (error.message && typeof error.message === 'string') {
       message = `Brevo API Error: ${error.message}`;
     }
@@ -618,6 +628,9 @@ export async function addSubscriberFromApi(
     triggerSubscriberCreated(apiUserId, newSubscriber).catch(err => 
       console.error('Failed to trigger subscriber.created webhook:', err)
     );
+    
+    // Automatic sequence enrollment for new subscribers
+    await enrollSubscriberInSequences(newSubscriber.id, apiUserId, segmentIds);
     
     return { success: true, message: 'Subscriber added successfully.', subscriberId: newSubscriber.id, statusCode: 201 };
   } catch (dbError: any) {

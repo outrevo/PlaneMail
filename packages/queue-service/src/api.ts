@@ -6,12 +6,18 @@ import { EmailJobData, EmailJobResponse } from '@planemail/shared';
 const app = express();
 const PORT = process.env.QUEUE_PORT || 3002;
 
-// Authentication configuration
-const QUEUE_API_KEY = process.env.QUEUE_API_KEY;
-const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY;
+// Authentication configuration - will be set when the API starts
+let QUEUE_API_KEY: string;
+let INTERNAL_API_KEY: string;
 
-if (!QUEUE_API_KEY || !INTERNAL_API_KEY) {
-  throw new Error('QUEUE_API_KEY and INTERNAL_API_KEY environment variables are required');
+// Initialize API configuration
+function initializeApiConfig() {
+  QUEUE_API_KEY = process.env.QUEUE_API_KEY!;
+  INTERNAL_API_KEY = process.env.INTERNAL_API_KEY!;
+
+  if (!QUEUE_API_KEY || !INTERNAL_API_KEY) {
+    throw new Error('QUEUE_API_KEY and INTERNAL_API_KEY environment variables are required');
+  }
 }
 
 // Authentication middleware
@@ -296,9 +302,40 @@ app.get('/api/queue/stats', authenticateRequest('internal'), async (req, res) =>
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Queue service HTTP API listening on port ${PORT}`);
+// Add sequence job (requires internal API key)
+app.post('/api/queue/sequence', authenticateRequest('internal'), async (req, res) => {
+  try {
+    const sequenceJobData = req.body;
+    
+    // Add sequence job to the sequence queue
+    const job = await emailQueueManager.addSequenceJob(sequenceJobData);
+    
+    console.log('Successfully queued sequence job:', sequenceJobData);
+    
+    res.json({
+      success: true,
+      message: 'Sequence job queued successfully',
+      jobId: job.id,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error adding sequence job:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to add sequence job'
+    });
+  }
 });
 
+// Export the app and a function to start the server
 export { app };
+
+export function startApiServer() {
+  // Initialize configuration with environment variables
+  initializeApiConfig();
+  
+  // Start server
+  app.listen(PORT, () => {
+    console.log(`Queue service HTTP API listening on port ${PORT}`);
+  });
+}

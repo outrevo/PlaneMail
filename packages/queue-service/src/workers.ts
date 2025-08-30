@@ -2,7 +2,9 @@ import { Worker, WorkerOptions } from 'bullmq';
 import { EmailJobData } from '@planemail/shared';
 import { emailQueueManager } from './queue-manager';
 import { processEmailJob } from './processors';
+import { processSequenceJob, SequenceJobData } from './sequence-processors';
 import { redis } from './redis';
+import { SharedDatabaseService, SharedEmailQueueService } from '@planemail/shared';
 
 // Worker configuration
 const WORKER_CONFIG = {
@@ -10,6 +12,7 @@ const WORKER_CONFIG = {
     newsletter: 2, // Process 2 newsletter jobs concurrently
     transactional: 5, // Process 5 transactional emails concurrently
     bulk: 1, // Process 1 bulk job at a time to avoid overwhelming providers
+    sequence: 3, // Process 3 sequence jobs concurrently
   },
 };
 
@@ -71,7 +74,17 @@ class EmailWorkerManager {
       }
     );
 
-    this.workers = [newsletterWorker, transactionalWorker, bulkWorker];
+    // Sequence queue worker
+    const sequenceWorker = new Worker(
+      'sequence-processing',
+      async (job) => this.createSequenceJobProcessor()(job),
+      {
+        ...WORKER_OPTIONS,
+        concurrency: WORKER_CONFIG.concurrency.sequence,
+      }
+    );
+
+    this.workers = [newsletterWorker, transactionalWorker, bulkWorker, sequenceWorker];
 
     // Set up worker event listeners
     this.setupWorkerEventListeners();
@@ -114,11 +127,50 @@ class EmailWorkerManager {
     };
   }
 
+  private createSequenceJobProcessor() {
+    return async (job: any) => {
+      console.log(`Processing sequence job ${job.id}: ${job.data.type}`);
+      
+      const startTime = Date.now();
+      
+      try {
+        // Set initial progress
+        await job.updateProgress(0);
+        
+        // Use proper shared database and email services
+        const dbService = new SharedDatabaseService();
+        const emailService = new SharedEmailQueueService(emailQueueManager);
+        
+        // Process the sequence job
+        const result = await processSequenceJob(job, dbService, emailService);
+        
+        // Set completion progress
+        await job.updateProgress(100);
+        
+        const processingTime = Date.now() - startTime;
+        console.log(
+          `✅ Completed sequence job ${job.id} in ${processingTime}ms. ` +
+          `Success: ${result.success}`
+        );
+        
+        return result;
+      } catch (error: any) {
+        const processingTime = Date.now() - startTime;
+        console.error(
+          `❌ Failed sequence job ${job.id} after ${processingTime}ms:`,
+          error.message
+        );
+        throw error;
+      }
+    };
+  }
+
   private setupWorkerEventListeners(): void {
     const workers = [
       { worker: this.workers[0], name: 'newsletter' },
       { worker: this.workers[1], name: 'transactional' },
       { worker: this.workers[2], name: 'bulk' },
+      { worker: this.workers[3], name: 'sequence' },
     ];
 
     workers.forEach(({ worker, name }) => {
