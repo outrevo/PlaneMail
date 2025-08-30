@@ -95,6 +95,27 @@ export function validateWebEnv(env: Record<string, string | undefined> = process
   }
 }
 
+// Build-time safe validation that makes runtime-only variables optional
+export function validateWebEnvForBuild(env: Record<string, string | undefined> = process.env) {
+  // Create a build-safe schema where runtime-only variables are optional
+  const buildSafeSchema = webEnvSchema.extend({
+    DATABASE_URL: z.string().optional(), // Optional during build
+    CLERK_SECRET_KEY: z.string().optional(), // Optional during build
+    PADDLE_WEBHOOK_SECRET: z.string().optional(), // Optional during build
+    IMAGEKIT_PRIVATE_KEY: z.string().optional(), // Optional during build
+    QUEUE_API_KEY: z.string().optional(), // Optional during build
+    INTERNAL_API_KEY: z.string().optional(), // Already optional
+    UNSUBSCRIBE_TOKEN_SECRET: z.string().optional(), // Optional during build
+  });
+
+  try {
+    return buildSafeSchema.parse(env);
+  } catch (error) {
+    console.error('❌ Invalid web environment variables:', error);
+    throw new Error('Invalid environment configuration');
+  }
+}
+
 export function validateQueueEnv(env: Record<string, string | undefined> = process.env) {
   try {
     return queueEnvSchema.parse(env);
