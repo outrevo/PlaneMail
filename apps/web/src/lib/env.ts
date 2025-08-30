@@ -3,12 +3,18 @@ import { validateWebEnv, validateWebEnvForBuild, type WebEnv } from '@planemail/
 // For Next.js, environment variables are automatically loaded from .env.local in the project root
 // No need to manually load them as Next.js handles this automatically
 
-// Determine if we're in a build context by checking for common build indicators
-const isBuildTime = process.env.NODE_ENV !== 'production' && (
+// Determine if we're in a build context
+const isBuildTime = (
+  // Next.js build phase
   process.env.NEXT_PHASE === 'phase-production-build' ||
+  // CI environment
   process.env.CI === 'true' ||
-  process.argv.includes('build') ||
-  process.argv.includes('next-build')
+  // Vercel build
+  process.env.VERCEL === '1' ||
+  // Command line arguments indicating build
+  process.argv.some(arg => arg.includes('build')) ||
+  // No DATABASE_URL during build (common scenario)
+  (!process.env.DATABASE_URL && process.env.NODE_ENV !== 'development')
 );
 
 // Validate and export environment variables for the web app

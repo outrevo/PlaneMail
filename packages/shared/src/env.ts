@@ -97,22 +97,55 @@ export function validateWebEnv(env: Record<string, string | undefined> = process
 
 // Build-time safe validation that makes runtime-only variables optional
 export function validateWebEnvForBuild(env: Record<string, string | undefined> = process.env) {
-  // Create a build-safe schema where runtime-only variables are optional
-  const buildSafeSchema = webEnvSchema.extend({
+  // Create a completely build-safe schema by recreating it without required runtime vars
+  const buildSafeBaseSchema = z.object({
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     DATABASE_URL: z.string().optional(), // Optional during build
+  });
+
+  const buildSafeSchema = buildSafeBaseSchema.extend({
+    // App URLs
+    NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+    NEXT_PUBLIC_BASE_URL: z.string().url().optional(),
+    
+    // Clerk Authentication
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().optional(), // Optional during build
     CLERK_SECRET_KEY: z.string().optional(), // Optional during build
-    PADDLE_WEBHOOK_SECRET: z.string().optional(), // Optional during build
-    IMAGEKIT_PRIVATE_KEY: z.string().optional(), // Optional during build
-    QUEUE_API_KEY: z.string().optional(), // Optional during build
-    INTERNAL_API_KEY: z.string().optional(), // Already optional
-    UNSUBSCRIBE_TOKEN_SECRET: z.string().optional(), // Optional during build
+    
+    // Paddle Configuration
+    PADDLE_API_ENV: z.enum(['sandbox', 'production']).default('sandbox'),
+    PADDLE_API_KEY: z.string().optional(),
+    NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: z.string().optional(),
+    NEXT_PUBLIC_PADDLE_HOSTED_PRICE_ID: z.string().optional(),
+    NEXT_PUBLIC_PADDLE_PRO_PRICE_ID: z.string().optional(),
+    NEXT_PUBLIC_PADDLE_ENTERPRISE_PRICE_ID: z.string().optional(),
+    PADDLE_HOSTED_PRICE_ID: z.string().optional(),
+    PADDLE_PRO_PRICE_ID: z.string().optional(),
+    PADDLE_ENTERPRISE_PRICE_ID: z.string().optional(),
+    PADDLE_WEBHOOK_SECRET: z.string().optional(),
+    
+    // ImageKit Configuration
+    NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY: z.string().optional(),
+    IMAGEKIT_PRIVATE_KEY: z.string().optional(),
+    NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT: z.string().url().optional(),
+    
+    // Queue Service
+    QUEUE_SERVICE_URL: z.string().url().default('http://localhost:3002'),
+    QUEUE_API_KEY: z.string().optional(),
+    INTERNAL_API_KEY: z.string().optional(),
+    
+    // SEO
+    GOOGLE_SITE_VERIFICATION: z.string().optional(),
+    
+    // Security
+    UNSUBSCRIBE_TOKEN_SECRET: z.string().default('fallback-secret-change-this'),
   });
 
   try {
     return buildSafeSchema.parse(env);
   } catch (error) {
-    console.error('❌ Invalid web environment variables:', error);
-    throw new Error('Invalid environment configuration');
+    console.error('❌ Invalid web environment variables during build:', error);
+    throw new Error('Invalid environment configuration during build');
   }
 }
 
