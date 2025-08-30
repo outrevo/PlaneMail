@@ -1,19 +1,16 @@
 
 import type { Config } from 'drizzle-kit';
-import * as dotenv from 'dotenv';
+import { validateWebEnv } from '@planemail/shared';
 
-dotenv.config({ path: '.env.local' });
-
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set in .env.local');
-}
+// Load and validate environment variables
+const env = validateWebEnv();
 
 export default {
-  schema: './apps/web/src/db/schema.ts',
+  schema: './packages/shared/src/database.ts',
   out: './drizzle/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: env.DATABASE_URL,
   },
   verbose: true,
   strict: true,

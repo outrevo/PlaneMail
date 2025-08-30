@@ -246,10 +246,30 @@ export class SequenceJobProcessor extends BaseSequenceProcessor {
       const existingEnrollment = await this.dbService.findExistingEnrollment(jobData.sequenceId, jobData.subscriberId);
       if (existingEnrollment && existingEnrollment.status === 'active') {
         console.log(`Subscriber ${jobData.subscriberId} already enrolled in sequence ${jobData.sequenceId}`);
+        
+        // Check if we need to schedule the next step for existing enrollment
+        const currentStepId = existingEnrollment.currentStepId || firstStep.id;
+        const nextScheduledAt = existingEnrollment.nextScheduledAt || this.calculateNextScheduledTime(firstStep, sequence.settings);
+        
+        // Schedule the step to execute if it's due now or overdue
+        const shouldScheduleNow = !nextScheduledAt || nextScheduledAt <= new Date();
+        const nextJobs = shouldScheduleNow ? [
+          createSequenceStepJob(
+            jobData.sequenceId,
+            existingEnrollment.id,
+            currentStepId,
+            jobData.subscriberId,
+            jobData.userId || 'system',
+            new Date(), // Execute immediately
+            jobData.orgId
+          )
+        ] : [];
+        
         return {
           success: true,
-          nextStepId: existingEnrollment.currentStepId || firstStep.id,
-          nextScheduledAt: existingEnrollment.nextScheduledAt || this.calculateNextScheduledTime(firstStep, sequence.settings),
+          nextStepId: currentStepId,
+          nextScheduledAt,
+          nextJobs,
           metadata: {
             enrollmentId: existingEnrollment.id,
             isExistingEnrollment: true,
@@ -275,10 +295,24 @@ export class SequenceJobProcessor extends BaseSequenceProcessor {
 
       console.log(`✅ Successfully enrolled subscriber ${jobData.subscriberId} in sequence ${jobData.sequenceId}`);
 
+      // Schedule the first step to execute
+      const nextJobs = [
+        createSequenceStepJob(
+          jobData.sequenceId,
+          enrollment.id,
+          firstStep.id,
+          jobData.subscriberId,
+          jobData.userId || 'system',
+          nextScheduledAt,
+          jobData.orgId
+        )
+      ];
+
       return {
         success: true,
         nextStepId: firstStep.id,
         nextScheduledAt,
+        nextJobs,
         metadata: {
           enrollmentId: enrollment.id,
           firstStepId: firstStep.id,

@@ -210,7 +210,7 @@ class ImageKitService {
   /**
    * Get image info from ImageKit
    */
-  async getImageInfo(fileId: string) {
+  async getImageInfo(fileId: string): Promise<any> {
     try {
       if (!imagekit) {
         console.error('ImageKit is not configured');

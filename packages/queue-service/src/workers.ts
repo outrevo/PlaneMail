@@ -4,7 +4,6 @@ import { emailQueueManager } from './queue-manager';
 import { processEmailJob } from './processors';
 import { processSequenceJob, SequenceJobData } from './sequence-processors';
 import { redis } from './redis';
-import { SharedDatabaseService, SharedEmailQueueService } from '@planemail/shared';
 
 // Worker configuration
 const WORKER_CONFIG = {
@@ -137,12 +136,25 @@ class EmailWorkerManager {
         // Set initial progress
         await job.updateProgress(0);
         
-        // Use proper shared database and email services
-        const dbService = new SharedDatabaseService();
-        const emailService = new SharedEmailQueueService(emailQueueManager);
+        // Process the sequence job with available services
+        const result = await processSequenceJob(job);
         
-        // Process the sequence job
-        const result = await processSequenceJob(job, dbService, emailService);
+        // Handle next jobs if any
+        if (result.nextJobs && result.nextJobs.length > 0) {
+          console.log(`📋 Scheduling ${result.nextJobs.length} follow-up job(s)`);
+          
+          // Import queue manager to schedule next jobs
+          const { emailQueueManager } = await import('./queue-manager');
+          
+          for (const nextJobData of result.nextJobs) {
+            const delay = nextJobData.scheduledFor ? 
+              Math.max(0, new Date(nextJobData.scheduledFor).getTime() - Date.now()) : 0;
+            
+            console.log(`📅 Scheduling ${nextJobData.type} job${delay > 0 ? ` with ${delay}ms delay` : ' immediately'}`);
+            
+            await emailQueueManager.addSequenceJob(nextJobData, { delay });
+          }
+        }
         
         // Set completion progress
         await job.updateProgress(100);
@@ -176,7 +188,16 @@ class EmailWorkerManager {
     workers.forEach(({ worker, name }) => {
       worker.on('completed', (job, result) => {
         console.log(`✅ ${name} job ${job.id} completed successfully`);
-        console.log(`📊 Result: ${result.totalSent} sent, ${result.totalFailed} failed`);
+        
+        if (name === 'sequence') {
+          // Handle sequence job results differently
+          const sent = result.metadata?.sent || result.sent || 'undefined';
+          const failed = result.metadata?.failed || result.failed || 'undefined';
+          console.log(`📊 Result: ${sent} sent, ${failed} failed`);
+        } else {
+          // Handle email job results
+          console.log(`📊 Result: ${result.totalSent} sent, ${result.totalFailed} failed`);
+        }
       });
 
       worker.on('failed', (job, err) => {

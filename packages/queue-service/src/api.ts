@@ -2,9 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import { emailQueueManager } from './queue-manager';
 import { EmailJobData, EmailJobResponse } from '@planemail/shared';
+import { env } from './env';
 
 const app = express();
-const PORT = process.env.QUEUE_PORT || 3002;
+const PORT = env.QUEUE_PORT || env.PORT || 3002;
 
 // Authentication configuration - will be set when the API starts
 let QUEUE_API_KEY: string;
@@ -12,11 +13,11 @@ let INTERNAL_API_KEY: string;
 
 // Initialize API configuration
 function initializeApiConfig() {
-  QUEUE_API_KEY = process.env.QUEUE_API_KEY!;
-  INTERNAL_API_KEY = process.env.INTERNAL_API_KEY!;
+  QUEUE_API_KEY = env.QUEUE_API_KEY;
+  INTERNAL_API_KEY = env.INTERNAL_API_KEY || env.QUEUE_API_KEY;
 
-  if (!QUEUE_API_KEY || !INTERNAL_API_KEY) {
-    throw new Error('QUEUE_API_KEY and INTERNAL_API_KEY environment variables are required');
+  if (!QUEUE_API_KEY) {
+    throw new Error('QUEUE_API_KEY environment variable is required');
   }
 }
 
@@ -93,7 +94,7 @@ const rateLimit = (maxRequests: number, windowMs: number) => {
 
 // Middleware
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || false,
+  origin: env.ALLOWED_ORIGINS?.split(',') || false,
   credentials: true
 }));
 app.use(express.json({ limit: '1mb' })); // Limit request size

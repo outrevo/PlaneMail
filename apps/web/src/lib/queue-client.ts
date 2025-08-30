@@ -1,79 +1,73 @@
-import axios, { AxiosInstance } from 'axios';
-import { EmailJobData, EmailJobResponse } from '@planemail/shared';
+import { EmailServiceOptions, EmailServiceResult } from '@planemail/shared';
+import { env } from './env';
 
-export class QueueServiceClient {
+export class QueueClient {
   private baseUrl: string;
-  private axiosInstance: AxiosInstance;
 
-  constructor(baseUrl: string = process.env.QUEUE_SERVICE_URL || 'http://localhost:3002') {
-    this.baseUrl = baseUrl;
-    
-    // Create axios instance with authentication
-    this.axiosInstance = axios.create({
-      baseURL: baseUrl,
-      timeout: 30000,
+  constructor(baseUrl: string = env.QUEUE_SERVICE_URL || 'http://localhost:3002') {
+    this.baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  }
+
+  private async request(endpoint: string, options: RequestInit = {}) {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.INTERNAL_API_KEY || process.env.QUEUE_API_KEY || ''}`
-      }
+        'Authorization': `Bearer ${env.INTERNAL_API_KEY || env.QUEUE_API_KEY || ''}`,
+        ...options.headers,
+      },
     });
 
-    // Add request interceptor for logging
-    this.axiosInstance.interceptors.request.use(
-      (config) => {
-        console.log(`Queue API Request: ${config.method?.toUpperCase()} ${config.url}`);
-        return config;
-      },
-      (error) => {
-        console.error('Queue API Request Error:', error);
-        return Promise.reject(error);
-      }
-    );
+    if (!response.ok) {
+      throw new Error(`Queue API Error: ${response.status} ${response.statusText}`);
+    }
 
-    // Add response interceptor for error handling
-    this.axiosInstance.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        console.error('Queue API Response Error:', error.response?.data || error.message);
-        return Promise.reject(error);
-      }
-    );
+    return response.json();
   }
 
-  async addNewsletterJob(jobData: EmailJobData): Promise<EmailJobResponse> {
+  async addEmailJob(options: EmailServiceOptions): Promise<EmailServiceResult> {
     try {
-      const response = await this.axiosInstance.post('/api/queue/newsletter', jobData);
-      return response.data;
+      const queueType = options.queueType || 'newsletter';
+      const result = await this.request(`/api/queue/${queueType}`, {
+        method: 'POST',
+        body: JSON.stringify(options),
+      });
+      return result;
     } catch (error) {
-      console.error('Failed to add newsletter job:', error);
+      console.error('Failed to add email job:', error);
       throw new Error('Queue service unavailable');
     }
   }
 
-  async addTransactionalJob(jobData: EmailJobData): Promise<EmailJobResponse> {
-    try {
-      const response = await this.axiosInstance.post('/api/queue/transactional', jobData);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to add transactional job:', error);
-      throw new Error('Queue service unavailable');
-    }
+  // Backward compatibility methods
+  async addNewsletterJob(jobData: any): Promise<any> {
+    return this.addEmailJob({ ...jobData, queueType: 'newsletter' });
   }
 
-  async addBulkJob(jobData: EmailJobData): Promise<EmailJobResponse> {
+  async addTransactionalJob(jobData: any): Promise<any> {
+    return this.addEmailJob({ ...jobData, queueType: 'transactional' });
+  }
+
+  async addBulkJob(jobData: any): Promise<any> {
+    return this.addEmailJob({ ...jobData, queueType: 'bulk' });
+  }
+
+  async addSequenceJob(jobData: any): Promise<any> {
     try {
-      const response = await this.axiosInstance.post('/api/queue/bulk', jobData);
-      return response.data;
+      const result = await this.request('/api/queue/sequence', {
+        method: 'POST',
+        body: JSON.stringify(jobData),
+      });
+      return result;
     } catch (error) {
-      console.error('Failed to add bulk job:', error);
+      console.error('Failed to add sequence job:', error);
       throw new Error('Queue service unavailable');
     }
   }
 
   async getJobStatus(jobId: string): Promise<any> {
     try {
-      const response = await this.axiosInstance.get(`/api/queue/status/${jobId}`);
-      return response.data;
+      return await this.request(`/api/jobs/${jobId}/status`);
     } catch (error) {
       console.error('Failed to get job status:', error);
       throw new Error('Queue service unavailable');
@@ -82,35 +76,24 @@ export class QueueServiceClient {
 
   async getQueueStats(): Promise<any> {
     try {
-      const response = await this.axiosInstance.get('/api/queue/stats');
-      return response.data;
+      return await this.request('/api/stats');
     } catch (error) {
       console.error('Failed to get queue stats:', error);
       throw new Error('Queue service unavailable');
     }
   }
 
-  async addSequenceJob(jobData: any): Promise<any> {
-    try {
-      const response = await this.axiosInstance.post('/api/queue/sequence', jobData);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to add sequence job:', error);
-      throw new Error('Queue service unavailable');
-    }
-  }
-
   async health(): Promise<{ status: string; queues: any }> {
     try {
-      // Health endpoint doesn't require auth
-      const response = await axios.get(`${this.baseUrl}/health`);
-      return response.data;
+      return await this.request('/health');
     } catch (error) {
-      console.error('Queue service health check failed:', error);
+      console.error('Queue health check failed:', error);
       throw new Error('Queue service unavailable');
     }
   }
 }
 
-// Singleton instance
-export const queueClient = new QueueServiceClient();
+// Backward compatibility export
+export class QueueServiceClient extends QueueClient {}
+
+export const queueClient = new QueueClient();

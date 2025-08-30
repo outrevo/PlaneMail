@@ -221,6 +221,7 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
     // Find the trigger node
     const triggerNode = nodeList.find(node => node.type === 'trigger');
     if (!triggerNode) {
+      console.log('No trigger node found');
       return nodeList;
     }
 
@@ -343,6 +344,7 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
       
       // Update step numbers for loaded data - FORCE THIS TO RUN
       const numberedNodes = updateStepNumbers(loadedNodes, loadedEdges);
+      console.log('Initial load - forcing step numbering:', numberedNodes.map(n => ({ id: n.id, label: n.data.label })));
       
       setNodes(numberedNodes);
       setEdges(loadedEdges);
@@ -351,6 +353,7 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
       setTimeout(() => {
         setNodes(currentNodes => {
           const reNumberedNodes = updateStepNumbers(currentNodes, loadedEdges);
+          console.log('Delayed force update:', reNumberedNodes.map(n => ({ id: n.id, label: n.data.label })));
           return [...reNumberedNodes];
         });
       }, 1000);
@@ -407,7 +410,16 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
         !node.data.label.startsWith('Step ')
       );
       
+      console.log('Step numbering check:', {
+        stepNodes: stepNodes.length,
+        hasUnnumberedSteps,
+        hasTypeChanges: hasChanges,
+        nodeLabels: stepNodes.map(n => n.data.label),
+        nodeTypes: nodes.map(n => ({ id: n.id, reactFlowType: n.type, dataType: n.data.type }))
+      });
+      
       if (hasUnnumberedSteps || hasChanges) {
+        console.log('Found issues with node types or numbering, fixing...');
         const numberedNodes = updateStepNumbers(fixedNodes, edges);
         setNodes(numberedNodes);
       }
@@ -421,8 +433,16 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
         const stepNodes = nodes.filter(n => n.type === 'step');
         const hasUnnumberedSteps = stepNodes.some(node => !node.data.label.startsWith('Step '));
         
+        console.log('Force update check:', {
+          stepNodes: stepNodes.length,
+          hasUnnumberedSteps,
+          labels: stepNodes.map(n => n.data.label)
+        });
+        
         if (hasUnnumberedSteps) {
+          console.log('Force updating step numbers after delay...');
           const numberedNodes = updateStepNumbers(nodes, edges);
+          console.log('Updated nodes:', numberedNodes.map(n => ({ id: n.id, label: n.data.label, type: n.type })));
           
           // Force state update by creating new array
           setNodes([...numberedNodes]);
@@ -432,6 +452,61 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
       return () => clearTimeout(timer);
     }
   }, [initialData, nodes, edges, updateStepNumbers]); // More comprehensive dependencies
+
+  // Emergency fix for step numbering - runs on mount
+  useEffect(() => {
+    // Add window functions that can be called from console for debugging
+    (window as any).fixStepLabels = () => {
+      console.log('Emergency step fix triggered');
+      const stepNodes = nodes.filter(n => n.type === 'step');
+      console.log('Current step nodes:', stepNodes.map(n => ({ id: n.id, label: n.data.label, type: n.data.type })));
+      
+      if (stepNodes.length > 0) {
+        const numberedNodes = updateStepNumbers(nodes, edges);
+        console.log('Updated step nodes:', numberedNodes.filter(n => n.type === 'step').map(n => ({ id: n.id, label: n.data.label })));
+        setNodes([...numberedNodes]);
+      }
+    };
+
+    (window as any).fixNodeTypes = () => {
+      console.log('Node type fix triggered');
+      const fixedNodes = nodes.map(node => {
+        let correctType = node.type;
+        if (node.data.type === 'email' || node.data.type === 'action' || node.data.type === 'wait' || node.data.type === 'condition') {
+          correctType = 'step';
+        } else if (node.data.type === 'trigger') {
+          correctType = 'trigger';
+        }
+        
+        console.log(`Node ${node.id}: ${node.type} -> ${correctType} (data.type: ${node.data.type})`);
+        
+        return {
+          ...node,
+          type: correctType
+        };
+      });
+      
+      const numberedNodes = updateStepNumbers(fixedNodes, edges);
+      console.log('Final nodes:', numberedNodes.map(n => ({ id: n.id, reactFlowType: n.type, dataType: n.data.type, label: n.data.label })));
+      setNodes([...numberedNodes]);
+    };
+
+    (window as any).debugNodes = () => {
+      console.log('Current nodes debug:', nodes.map(n => ({
+        id: n.id,
+        reactFlowType: n.type,
+        dataType: n.data.type,
+        label: n.data.label,
+        isConfigured: n.data.isConfigured
+      })));
+    };
+
+    return () => {
+      delete (window as any).fixStepLabels;
+      delete (window as any).fixNodeTypes;
+      delete (window as any).debugNodes;
+    };
+  }, [nodes, edges, updateStepNumbers]);
 
   // Load available email providers
   useEffect(() => {
@@ -709,6 +784,18 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
 
     setIsSaving(true);
 
+    // Debug: Log the current nodes structure before saving
+    console.log('DEBUG: About to save - current nodes structure:');
+    nodes.forEach(node => {
+      console.log(`Node ${node.id}:`, {
+        id: node.id,
+        reactFlowType: node.type,
+        dataExists: !!node.data,
+        data: node.data,
+        position: node.position
+      });
+    });
+
     const sequenceData = {
       id: sequenceId,
       name: sequenceName.trim(),
@@ -735,6 +822,9 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
       },
     };
     
+    console.log('Saving sequence:', sequenceData);
+    console.log('Nodes being saved:', nodes.map(n => ({ id: n.id, type: n.data.type, isConfigured: n.data.isConfigured, config: n.data.config })));
+    
     try {
       const response = await fetch('/api/sequences', {
         method: sequenceId ? 'PUT' : 'POST',
@@ -748,6 +838,7 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
       }
       
       const result = await response.json();
+      console.log('Sequence saved successfully:', result);
       
       // Show success message with more details
       const action = sequenceId ? 'updated' : 'created';
@@ -878,6 +969,7 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
       }
 
       const result = await response.json();
+      console.log(`Sequence ${action}d successfully:`, result);
 
       // Update local state
       setSequenceStatus(newStatus);
@@ -1092,6 +1184,37 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
               <Redo className="w-4 h-4" />
             </Button>
             <Separator orientation="vertical" className="h-6" />
+            {/* Debug button to manually trigger step numbering and node type fixing */}
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => {
+                console.log('Manual node fix triggered');
+                
+                // Fix node types first
+                const fixedNodes = nodes.map(node => {
+                  let correctType = node.type;
+                  if (node.data.type === 'email' || node.data.type === 'action' || node.data.type === 'wait' || node.data.type === 'condition') {
+                    correctType = 'step';
+                  } else if (node.data.type === 'trigger') {
+                    correctType = 'trigger';
+                  }
+                  
+                  return {
+                    ...node,
+                    type: correctType
+                  };
+                });
+                
+                // Then apply step numbering
+                const numberedNodes = updateStepNumbers(fixedNodes, edges);
+                console.log('Before fix:', nodes.map(n => ({ id: n.id, reactFlowType: n.type, dataType: n.data.type, label: n.data.label })));
+                console.log('After fix:', numberedNodes.map(n => ({ id: n.id, reactFlowType: n.type, dataType: n.data.type, label: n.data.label })));
+                setNodes([...numberedNodes]);
+              }}
+            >
+              🔧 Fix Nodes
+            </Button>
             <Button variant="outline" size="sm">
               <Settings className="w-4 h-4 mr-2" />
               Settings
@@ -1154,30 +1277,25 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
 
       {/* Configuration Panel */}
       <Sheet open={isConfigPanelOpen} onOpenChange={setIsConfigPanelOpen}>
-        <SheetContent className="w-96 flex flex-col backdrop-blur-xl bg-white/95 dark:bg-slate-900/95 border-l border-white/20 dark:border-slate-700/30 shadow-2xl">
-          <SheetHeader className="border-b border-white/20 dark:border-slate-700/30 pb-6 backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 -mx-6 px-6 -mt-6 pt-6 rounded-t-xl">
-            <SheetTitle className="flex items-center justify-between text-slate-900 dark:text-white">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                  <Settings className="w-4 h-4 text-white" />
-                </div>
-                <span className="font-semibold">Configure Step</span>
-              </div>
+        <SheetContent className="w-96 flex flex-col">
+          <SheetHeader className="border-b border-gray-200 pb-4">
+            <SheetTitle className="flex items-center justify-between">
+              <span>Configure Step</span>
               {selectedNode && selectedNode.id !== 'trigger' && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-white/80 dark:hover:bg-slate-700/80 backdrop-blur-sm rounded-lg">
+                    <Button variant="ghost" size="sm">
                       <ChevronDown className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="backdrop-blur-xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-700/30 shadow-2xl">
-                    <DropdownMenuItem onClick={() => selectedNode && duplicateNode(selectedNode)} className="hover:bg-white/80 dark:hover:bg-slate-700/80">
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => selectedNode && duplicateNode(selectedNode)}>
                       <Copy className="w-4 h-4 mr-2" />
                       Duplicate
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => selectedNode && deleteNode(selectedNode.id)}
-                      className="text-red-600 hover:bg-red-50/80 dark:hover:bg-red-900/20"
+                      className="text-red-600"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Delete
@@ -1189,9 +1307,9 @@ export default function SequenceVisualEditor({ sequenceId: initialSequenceId, in
           </SheetHeader>
           
           {/* Scrollable Content Area */}
-          <div className="flex-1 overflow-y-auto pt-6 px-1">
+          <div className="flex-1 overflow-y-auto pt-6">
             {selectedNode && (
-              <div className="space-y-6 pr-1">
+              <div className="space-y-6 pr-2">
                 <StepConfigurationPanel
                   node={selectedNode}
                   onUpdate={(config) => updateNodeConfig(selectedNode.id, config)}
@@ -1255,19 +1373,19 @@ function StepConfigurationPanel({ node, onUpdate, availableProviders }: StepConf
 // Individual step configuration components
 function TriggerConfiguration({ config, onUpdate }: { config: any; onUpdate: (config: any) => void }) {
   return (
-    <div className="space-y-6">
-      <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-        <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Trigger Type</Label>
+    <div className="space-y-4">
+      <div>
+        <Label>Trigger Type</Label>
         <Select 
           value={config.triggerType || ''} 
           onValueChange={(value) => onUpdate({ ...config, triggerType: value })}
         >
-          <SelectTrigger className="mt-2 backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50">
+          <SelectTrigger>
             <SelectValue placeholder="Select trigger type" />
           </SelectTrigger>
-          <SelectContent className="backdrop-blur-xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-700/30 shadow-2xl">
+          <SelectContent>
             {triggerTypes.map((trigger) => (
-              <SelectItem key={trigger.type} value={trigger.type} className="hover:bg-white/80 dark:hover:bg-slate-700/80">
+              <SelectItem key={trigger.type} value={trigger.type}>
                 {trigger.label}
               </SelectItem>
             ))}
@@ -1276,10 +1394,9 @@ function TriggerConfiguration({ config, onUpdate }: { config: any; onUpdate: (co
       </div>
 
       {config.triggerType === 'tag_added' && (
-        <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-          <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Tag Name</Label>
+        <div>
+          <Label>Tag Name</Label>
           <Input
-            className="mt-2 backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50"
             value={config.tagName || ''}
             onChange={(e) => onUpdate({ ...config, tagName: e.target.value })}
             placeholder="Enter tag name"
@@ -1288,10 +1405,9 @@ function TriggerConfiguration({ config, onUpdate }: { config: any; onUpdate: (co
       )}
 
       {config.triggerType === 'tag_removed' && (
-        <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-          <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Tag Name</Label>
+        <div>
+          <Label>Tag Name</Label>
           <Input
-            className="mt-2 backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50"
             value={config.tagName || ''}
             onChange={(e) => onUpdate({ ...config, tagName: e.target.value })}
             placeholder="Enter tag name"
@@ -1316,51 +1432,47 @@ function EmailStepConfiguration({ config, onUpdate, availableProviders }: {
   }>;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Provider Status Indicator */}
-      <div className={`p-4 rounded-xl border backdrop-blur-sm shadow-lg ${
+      <div className={`p-3 rounded-lg border ${
         availableProviders.length > 0 
-          ? 'border-emerald-200/50 bg-emerald-50/70 dark:bg-emerald-900/20 dark:border-emerald-700/30' 
-          : 'border-red-200/50 bg-red-50/70 dark:bg-red-900/20 dark:border-red-700/30'
+          ? 'border-green-200 bg-green-50' 
+          : 'border-red-200 bg-red-50'
       }`}>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
           {availableProviders.length > 0 ? (
             <>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg">
-                <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+              <svg className="w-4 h-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-medium text-green-800">
                 {availableProviders.length} email provider{availableProviders.length === 1 ? '' : 's'} connected
               </span>
             </>
           ) : (
             <>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
-                <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-red-800 dark:text-red-200">No email providers connected</span>
+              <svg className="w-4 h-4 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <span className="text-sm font-medium text-red-800">No email providers connected</span>
             </>
           )}
         </div>
       </div>
 
       {/* Email Provider Selection */}
-      <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-        <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Provider</Label>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-3">Choose which email service to use for sending</p>
+      <div>
+        <Label>Email Provider</Label>
+        <p className="text-sm text-gray-500 mb-3">Choose which email service to use for sending</p>
         {availableProviders.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {availableProviders.map((provider) => (
               <label
                 key={provider.id}
-                className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-all backdrop-blur-sm shadow-sm ${
+                className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                   config.sendingProviderId === provider.id
-                    ? 'border-indigo-300/50 bg-indigo-50/70 dark:bg-indigo-900/20 dark:border-indigo-600/30 shadow-lg'
-                    : 'border-white/30 dark:border-slate-600/30 bg-white/40 dark:bg-slate-700/40 hover:bg-white/60 dark:hover:bg-slate-700/60'
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:bg-gray-50'
                 }`}
               >
                 <input
@@ -1376,12 +1488,12 @@ function EmailStepConfiguration({ config, onUpdate, availableProviders }: {
                       ? provider.senders[0].email 
                       : config.fromEmail
                   })}
-                  className="text-indigo-600 focus:ring-indigo-500"
+                  className="text-blue-600"
                 />
                 <div className="flex-1">
-                  <div className="font-medium text-slate-800 dark:text-slate-200">{provider.name}</div>
+                  <div className="font-medium">{provider.name}</div>
                   {provider.senders && provider.senders.length > 0 && (
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    <div className="text-sm text-gray-500">
                       {provider.senders.length === 1 
                         ? `Available: ${provider.senders[0].email}`
                         : `${provider.senders.length} verified senders available`
@@ -1393,21 +1505,21 @@ function EmailStepConfiguration({ config, onUpdate, availableProviders }: {
             ))}
           </div>
         ) : (
-          <div className="p-4 border border-red-200/50 bg-red-50/70 dark:bg-red-900/20 dark:border-red-700/30 rounded-lg backdrop-blur-sm">
+          <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
-                <svg className="w-5 h-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="w-5 h-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">No Email Providers Connected</h4>
-                <p className="text-sm text-red-700 dark:text-red-300 mb-2">
+                <h4 className="text-sm font-medium text-red-800 mb-1">No Email Providers Connected</h4>
+                <p className="text-sm text-red-700 mb-2">
                   You cannot send emails from sequences without connecting an email provider.
                 </p>
                 <a 
                   href="/integrations" 
-                  className="inline-flex items-center text-sm font-medium text-red-800 dark:text-red-200 underline hover:text-red-900 dark:hover:text-red-100"
+                  className="inline-flex items-center text-sm font-medium text-red-800 underline hover:text-red-900"
                 >
                   Connect an Email Provider →
                 </a>
@@ -1418,10 +1530,9 @@ function EmailStepConfiguration({ config, onUpdate, availableProviders }: {
       </div>
 
       {/* From Name */}
-      <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-        <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">From Name</Label>
+      <div>
+        <Label>From Name</Label>
         <Input
-          className="mt-2 backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50"
           value={config.fromName || ''}
           onChange={(e) => onUpdate({ ...config, fromName: e.target.value })}
           placeholder="Your Name or Company"
@@ -1429,13 +1540,13 @@ function EmailStepConfiguration({ config, onUpdate, availableProviders }: {
       </div>
 
       {/* From Email */}
-      <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-        <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">From Email</Label>
+      <div>
+        <Label>From Email</Label>
         {config.sendingProviderId && availableProviders.length > 0 ? (
           <select
             value={config.fromEmail || ''}
             onChange={(e) => onUpdate({ ...config, fromEmail: e.target.value })}
-            className="mt-2 w-full h-10 px-3 backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border border-white/30 dark:border-slate-600/30 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent"
+            className="w-full h-10 px-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Select sender email</option>
             {availableProviders
@@ -1449,7 +1560,6 @@ function EmailStepConfiguration({ config, onUpdate, availableProviders }: {
         ) : (
           <Input
             type="email"
-            className="mt-2 backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50"
             value={config.fromEmail || ''}
             onChange={(e) => onUpdate({ ...config, fromEmail: e.target.value })}
             placeholder="your@email.com"
@@ -1457,42 +1567,37 @@ function EmailStepConfiguration({ config, onUpdate, availableProviders }: {
         )}
       </div>
 
-      {/* Email Subject */}
-      <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-        <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Subject</Label>
+      <div>
+        <Label>Email Subject</Label>
         <Input
-          className="mt-2 backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50"
           value={config.subject || ''}
           onChange={(e) => onUpdate({ ...config, subject: e.target.value })}
           placeholder="Enter email subject"
         />
       </div>
 
-      {/* Email Template */}
-      <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-        <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Email Template</Label>
+      <div>
+        <Label>Email Template</Label>
         <Select 
           value={config.templateId || ''} 
           onValueChange={(value) => onUpdate({ ...config, templateId: value })}
         >
-          <SelectTrigger className="mt-2 backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50">
+          <SelectTrigger>
             <SelectValue placeholder="Select template" />
           </SelectTrigger>
-          <SelectContent className="backdrop-blur-xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-700/30 shadow-2xl">
-            <SelectItem value="welcome" className="hover:bg-white/80 dark:hover:bg-slate-700/80">Welcome Email</SelectItem>
-            <SelectItem value="newsletter" className="hover:bg-white/80 dark:hover:bg-slate-700/80">Newsletter</SelectItem>
-            <SelectItem value="promotion" className="hover:bg-white/80 dark:hover:bg-slate-700/80">Promotion</SelectItem>
+          <SelectContent>
+            <SelectItem value="welcome">Welcome Email</SelectItem>
+            <SelectItem value="newsletter">Newsletter</SelectItem>
+            <SelectItem value="promotion">Promotion</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Delay Configuration */}
-      <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-        <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Delay After Previous Step</Label>
-        <div className="grid grid-cols-2 gap-3 mt-2">
+      <div>
+        <Label>Delay After Previous Step</Label>
+        <div className="grid grid-cols-2 gap-2">
           <Input
             type="number"
-            className="backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50"
             value={config.delayAmount || 0}
             onChange={(e) => onUpdate({ 
               ...config, 
@@ -1504,14 +1609,14 @@ function EmailStepConfiguration({ config, onUpdate, availableProviders }: {
             value={config.delayUnit || 'hours'} 
             onValueChange={(value) => onUpdate({ ...config, delayUnit: value })}
           >
-            <SelectTrigger className="backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="backdrop-blur-xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-700/30 shadow-2xl">
-              <SelectItem value="minutes" className="hover:bg-white/80 dark:hover:bg-slate-700/80">Minutes</SelectItem>
-              <SelectItem value="hours" className="hover:bg-white/80 dark:hover:bg-slate-700/80">Hours</SelectItem>
-              <SelectItem value="days" className="hover:bg-white/80 dark:hover:bg-slate-700/80">Days</SelectItem>
-              <SelectItem value="weeks" className="hover:bg-white/80 dark:hover:bg-slate-700/80">Weeks</SelectItem>
+            <SelectContent>
+              <SelectItem value="minutes">Minutes</SelectItem>
+              <SelectItem value="hours">Hours</SelectItem>
+              <SelectItem value="days">Days</SelectItem>
+              <SelectItem value="weeks">Weeks</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1522,13 +1627,12 @@ function EmailStepConfiguration({ config, onUpdate, availableProviders }: {
 
 function WaitStepConfiguration({ config, onUpdate }: { config: any; onUpdate: (config: any) => void }) {
   return (
-    <div className="space-y-6">
-      <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-        <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Wait Duration</Label>
-        <div className="grid grid-cols-2 gap-3 mt-2">
+    <div className="space-y-4">
+      <div>
+        <Label>Wait Duration</Label>
+        <div className="grid grid-cols-2 gap-2">
           <Input
             type="number"
-            className="backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50"
             value={config.amount || 1}
             onChange={(e) => onUpdate({ 
               ...config, 
@@ -1541,26 +1645,24 @@ function WaitStepConfiguration({ config, onUpdate }: { config: any; onUpdate: (c
             value={config.unit || 'days'} 
             onValueChange={(value) => onUpdate({ ...config, unit: value })}
           >
-            <SelectTrigger className="backdrop-blur-sm bg-white/70 dark:bg-slate-800/70 border-white/30 dark:border-slate-600/30 focus:ring-2 focus:ring-indigo-500/50">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="backdrop-blur-xl bg-white/95 dark:bg-slate-900/95 border border-white/20 dark:border-slate-700/30 shadow-2xl">
-              <SelectItem value="hours" className="hover:bg-white/80 dark:hover:bg-slate-700/80">Hours</SelectItem>
-              <SelectItem value="days" className="hover:bg-white/80 dark:hover:bg-slate-700/80">Days</SelectItem>
-              <SelectItem value="weeks" className="hover:bg-white/80 dark:hover:bg-slate-700/80">Weeks</SelectItem>
+            <SelectContent>
+              <SelectItem value="hours">Hours</SelectItem>
+              <SelectItem value="days">Days</SelectItem>
+              <SelectItem value="weeks">Weeks</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="backdrop-blur-sm bg-white/50 dark:bg-slate-800/50 rounded-xl p-4 border border-white/20 dark:border-slate-700/30 shadow-lg">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">Respect Business Hours</Label>
-          <Switch
-            checked={config.respectBusinessHours || false}
-            onCheckedChange={(checked) => onUpdate({ ...config, respectBusinessHours: checked })}
-          />
-        </div>
+      <div className="flex items-center justify-between">
+        <Label>Respect Business Hours</Label>
+        <Switch
+          checked={config.respectBusinessHours || false}
+          onCheckedChange={(checked) => onUpdate({ ...config, respectBusinessHours: checked })}
+        />
       </div>
     </div>
   );

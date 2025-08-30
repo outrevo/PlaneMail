@@ -127,10 +127,10 @@ export default function SequencesPage() {
           triggerType: seq.triggerConfig?.triggerType || 'manual',
           stepCount: seq.nodes?.filter((node: any) => node.type !== 'trigger').length || 0,
           stats: {
-            totalEntered: 0, // TODO: Implement stats tracking
-            totalCompleted: 0,
-            currentActive: 0,
-            conversionRate: 0,
+            totalEntered: seq.stats?.totalEntered || 0,
+            totalCompleted: seq.stats?.totalCompleted || 0,
+            currentActive: seq.stats?.currentActive || 0,
+            conversionRate: seq.stats?.conversionRate || 0,
           },
           createdAt: seq.createdAt || new Date().toISOString(),
           updatedAt: seq.updatedAt || new Date().toISOString(),

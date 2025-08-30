@@ -9,7 +9,6 @@ import { emailQueueManager } from './queue-manager';
 import { startApiServer } from './api'; // Import the start function instead of auto-importing
 
 // Export all sequence processor types and utilities
-export * from './sequence-processors';
 export * from './processors/base-processor';
 export * from './processors/sequence-job-processor';
 export * from './processors/email-step-processor';

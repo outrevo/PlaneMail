@@ -17,7 +17,16 @@ export class EmailStepProcessor extends BaseSequenceProcessor {
     step: SequenceStep,
     subscriberData: any
   ): Promise<SequenceProcessorResult> {
-    if (step.type !== 'email' || !step.config.emailConfig) {
+    console.log('🔍 EmailStepProcessor received step config:', JSON.stringify(step.config, null, 2));
+    console.log('🔍 Step type:', step.type);
+    console.log('🔍 Has emailConfig?', !!step.config?.emailConfig);
+    
+    if (step.type !== 'email' || !step.config?.emailConfig) {
+      console.log('❌ EmailStepProcessor validation failed:', {
+        stepType: step.type,
+        hasEmailConfig: !!step.config?.emailConfig,
+        configKeys: step.config ? Object.keys(step.config) : 'no config'
+      });
       return {
         success: false,
         error: 'Invalid email step configuration',
@@ -28,7 +37,37 @@ export class EmailStepProcessor extends BaseSequenceProcessor {
     
     try {
       // Load provider configuration for email sending
-      const providerConfig = await this.dbService.getUserIntegrations(sequence.userId, sequence.orgId);
+      const integrations = await this.dbService.getUserIntegrations(sequence.userId, sequence.orgId);
+      
+      // Transform integrations array into provider config object
+      const providerConfig: any = {};
+      if (Array.isArray(integrations)) {
+        for (const integration of integrations) {
+          if (integration.status === 'active' && integration.apiKey) {
+            if (integration.provider === 'brevo') {
+              providerConfig.brevo = {
+                apiKey: integration.apiKey,
+              };
+            } else if (integration.provider === 'mailgun') {
+              const meta = integration.meta as any;
+              providerConfig.mailgun = {
+                apiKey: integration.apiKey,
+                domain: meta?.domain,
+                region: meta?.region,
+              };
+            } else if (integration.provider === 'amazon_ses') {
+              const meta = integration.meta as any;
+              providerConfig.amazon_ses = {
+                accessKeyId: integration.apiKey,
+                secretAccessKey: integration.secretApiKey,
+                region: meta?.region,
+              };
+            }
+          }
+        }
+      }
+      
+      console.log(`🔧 Built provider config for user ${sequence.userId}:`, Object.keys(providerConfig));
       
       // Create email job data
       const emailJobData: EmailJobData = {

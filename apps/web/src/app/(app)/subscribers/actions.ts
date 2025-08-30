@@ -188,8 +188,15 @@ export async function deleteSubscriber(id: string) {
   if (!userId) return { success: false, message: 'Not authenticated' };
 
   try {
+    // Remove from segments first
     await db.delete(subscriberSegments).where(eq(subscriberSegments.subscriberId, id)); 
+    
+    // Remove from sequence enrollments (this will cascade to step executions)
+    await db.delete(sequenceEnrollments).where(eq(sequenceEnrollments.subscriberId, id));
+    
+    // Finally delete the subscriber
     await db.delete(subscribers).where(and(eq(subscribers.id, id), eq(subscribers.userId, userId)));
+    
     revalidatePath('/subscribers');
     return { success: true, message: 'Subscriber deleted successfully.' };
   } catch (error) {
@@ -209,6 +216,9 @@ export async function bulkDeleteSubscribers(subscriberIds: string[]) {
   try {
     // Delete segment associations first
     await db.delete(subscriberSegments).where(inArray(subscriberSegments.subscriberId, subscriberIds));
+    
+    // Remove from sequence enrollments (this will cascade to step executions)
+    await db.delete(sequenceEnrollments).where(inArray(sequenceEnrollments.subscriberId, subscriberIds));
     
     // Delete subscribers (only those belonging to the user)
     const result = await db.delete(subscribers).where(
